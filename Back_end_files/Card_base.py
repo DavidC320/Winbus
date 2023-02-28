@@ -15,7 +15,10 @@ def create_card(name):
         return Card(card[0], card[1], card[2], card[3])
 
 cards = {
-    "dagger" : ("Dagger", "offense", 1, "dagger"),
-    "bow" : ("Bow", "offense", 2, "bow"),
-    "shield" : ("Shield", "defense", 3, "shield")
+    "dagger" : ("Dagger", "unit", 1, "dagger"),
+    "bow" : ("Bow", "unit", 2, "bow"),
+    "shield" : ("Shield", "unit", 3, "shield"),
+    "wall" : ("Wall", "tower", 5, "wall"),
+    "sword": ("Sword", "unit", 6, "sword"),
+    "ballista": ("Ballista", "unit", 5, "ballista")
 }

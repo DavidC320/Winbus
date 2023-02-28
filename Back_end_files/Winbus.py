@@ -67,10 +67,10 @@ class Winbus:
     def set_up_teams(self):
         self.game_start = self.current_time
         self.game_state = "fight"
-        self.player_1.cursor.set_up([80, 200], "#ab6767", self.player_1_field[0])
-        self.player_1.set_up_decks([80, 200], self.current_time)
-        self.player_2.cursor.set_up([1120, 200], "#6668aa", self.player_2_field[0])
-        self.player_2.set_up_decks([1120, 200], self.current_time)
+        self.player_1.cursor.set_up([100, 200], "#ab6767", self.player_1_field[0])
+        self.player_1.set_up_decks([100, 200], self.current_time)
+        self.player_2.cursor.set_up([1100, 200], "#6668aa", self.player_2_field[0])
+        self.player_2.set_up_decks([1100, 200], self.current_time)
 
 
     def team_control(self, event):

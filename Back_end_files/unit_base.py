@@ -168,8 +168,8 @@ class Unit:
             "player 2" : "blue"
         }
         pygame.draw.rect(display, team_color.get(self.team_name), self.collision_rect, 4)
-        """pygame.draw.rect(display, "yellow", self.search_rect, 5)
-        pygame.draw.rect(display, "orange", self.attack_rect, 5)"""
+        pygame.draw.rect(display, "yellow", self.search_rect, 5)
+        pygame.draw.rect(display, "orange", self.attack_rect, 5)
         health_text_pos= [self.position[0], self.position[1] + 5 + self.size/2]
         quick_display_text(display, f"{self.health} \ {self.max_health}", "white",health_text_pos,size=10)
         """
@@ -216,19 +216,31 @@ activators= {
 
 #
 units= {
-    "crown": ("Crown", "noble", [0, 0], 80, "yellow", 
+    "crown": ("Crown", "noble", [0, 0], 200, "yellow", 
               [200, 200], 0, 2, 25,
-              "all", 400, 300, ["crown rage"]),
+              "all", 200, 200, ["crown rage"]),
 
     "dagger": ("Dagger", "unit", [0, 0], 20, "Grey",
-               [4, 4], .5, 1, 2,
-               "all", 400, 20, []),
+               [4, 4], .8, 1, 2,
+               "all", 200, 20, []),
 
     "shield": ("Shield", "unit", [0, 0], 40, "Cyan",
                [30, 30], .5, 3, 0,
-               "all", 400, 50, []),
+               "all", 200, 50, []),
 
     "bow": ("Bow", "unit", [0, 0], 20, "Brown",
             [4, 4], .5, 2, 2,
-            "all", 400, 150, [])
+            "all", 200, 150, []),
+    
+    "wall": ("Wall", "unit", [0, 0], 60, "Tan",
+             [60, 60], 0, 1, 0,
+             "all", 200, 20, []),
+    
+    "sword": ("Sword", "noble", [0, 0], 40, "Red",
+              [20, 20], 1, 1.5, 5,
+              "all", 200, 30, []),
+    
+    "ballista": ("Ballista", "unit", [0, 0], 40, "Purple",
+                 [15, 15], 0, 2.5, 10,
+                 "all", 300, 200, [])
 }

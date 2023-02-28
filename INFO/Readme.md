@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1
+Version 1.1
 
 Version name
 
-clash of crows
+Armies
 
 ## What is this game
 

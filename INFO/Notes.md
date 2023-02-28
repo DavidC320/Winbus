@@ -16,3 +16,38 @@ So here is what I was thinking of using a matrix system to do this.
         [dagger, dagger],
         [dagger, dagger]
     ]
+
+To get this to work I need to temporarily initialize the units to get their size so that it can be used in positioning.
+Here is how it works the game will get the row length and column length
+
+Solution #1
+
+The problem with creating units is that the position is set as center which makes topleft useless so the x and y would need to be halved.
+
+    Sample example
+
+    unit group= [
+        [40, 40,]
+        [40, 40]
+    ]
+
+    padding= 0
+    0 + 40 + 0 + 40 + 0
+    0 +
+    + 0 40 
+
+    80 40 40 160
+    80 40 120
+    40 80
+    40
+    -80 -40 40 80
+    -40 00 40  = 40 80 120 = 80 + 40 = 120, 40 + 80 = 120, 0 + 120 = 120 
+    -40 40 = 40 80 = 40 + 40 = 80, 0 + 80 = 80
+    0
+
+    -20 00 20
+    -20 20
+    0
+
+
+I need to make a test file to do this.
