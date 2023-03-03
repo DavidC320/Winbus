@@ -1,15 +1,38 @@
 # 2/20/2023
 from misc_funtions import timer, use_restraint, quick_display_text
+from Game_data import activators, units, area_attacks
 
 import pygame
 import math
 
+def create_unit(unit_name, time):
+    wanted_unit = units.get(unit_name)
+    if wanted_unit:
+        return Unit(wanted_unit[0], wanted_unit[1], wanted_unit[2], wanted_unit[3], wanted_unit[4], wanted_unit[5], wanted_unit[6], wanted_unit[7], wanted_unit[8], wanted_unit[9], wanted_unit[10], wanted_unit[11], wanted_unit[12], time)
+
+def create_activator(activator_name, time):
+    wanted_activator = activators.get(activator_name)
+    if wanted_activator:
+        return Activator(wanted_activator[0], wanted_activator[1], 
+                         wanted_activator[2], wanted_activator[3], wanted_activator[4], wanted_activator[5], time)
+
+def create_area_attack(area_attack_name):
+    wanted_area_attack = area_attacks.get(area_attack_name)
+    if wanted_area_attack:
+        return Area_attack_object(wanted_area_attack[0], wanted_area_attack[1], wanted_area_attack[2])
+    else:
+        return 0
+
+##############################################################################################################################################
+#################################################################### Unit ####################################################################
+##############################################################################################################################################
+
 class Unit:
     def __init__(
-            self, name: str, unit_type: str, position: list, size: int, color: str,
+            self, name: str, unit_type: str, flags: list, size: int, color: str,
             health: list, walk_speed: int, attack_speed: int, damage: int,
             search_unit_type: str, search_range: int, attack_range: int,
-            properties: list):
+            properties: list, time: int):
         # rectangles
         self.collision_rect= None
         self.search_rect= None
@@ -18,7 +41,8 @@ class Unit:
         # info
         self.name= name
         self.unit_type= unit_type
-        self.position= position
+        self.position= [0, 0]
+        self.flags= flags
         self.size= size
         self.color= color
         
@@ -27,6 +51,8 @@ class Unit:
         self.walk_speed= walk_speed
         self.attack_speed= attack_speed
         self.damage= damage
+        if isinstance(damage, str):
+            self.damage = create_area_attack(damage)
 
         # searching
         self.search_unit_type= search_unit_type
@@ -36,7 +62,7 @@ class Unit:
         # properties
         self.properties= []
         for activator_name in properties:
-            self.properties.append(create_activator(activator_name))
+            self.properties.append(create_activator(activator_name, time))
 
         # other info
         self.velocity= [0, 0]
@@ -45,23 +71,46 @@ class Unit:
         self.attack_time= 0
         self.restraint= None
         self.team_name= None
+        self.action= []
 
-    def activation(self, activator):
-        for effect in activator.effects:
-            stat, change = effect
-            self.__dict__[stat]= change
-        activator.not_used = False
+    def activation(self, activator, current_time):
+        print(activator.effects)
+        for stat, operation, change in activator.effects:
+            if operation == "set":
+                self.__dict__[stat]= change
+            elif operation == "change":
+                self.__dict__[stat] += change
+        if activator.destroy_on_use:
+            activator.not_used = False
 
-    def property_activator(self, activator, game_state):
+    def property_activator(self, activator, game_state, current_time):
         if activator.activation_type == "game state" and activator.condition == game_state:
-            self.activation(activator)
+            self.activation(activator, current_time)
             self.create_rectangles()
+        elif activator.activation_type == "timer" and timer(activator.start_time, activator.condition, current_time):
+            activator.start_time = current_time
+            self.activation(activator, current_time)
+            self.create_rectangles()
+            
+        elif activator.activation_type == "check actions" and activator.condition in self.action:
+            self.activation(activator, current_time)
+            self.create_rectangles()
+            
+        self.action.clear()
 
 
-    def check_properties(self, game_state):
+    def check_properties(self, game_state, current_time):
         for activator in self.properties:
             if activator.not_used:
-                self.property_activator(activator, game_state)
+                self.property_activator(activator, game_state, current_time)
+                
+    def check_flags(self, opposing_team, current_time):
+        if "attack_area_on_death" in self.flags and isinstance(self.damage, Area_attack_object):
+            self.damage.set_rect(self.position, current_time)
+            blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
+            for unit, _ in blast_enemies:
+                unit.change_health(-self.damage.damage)
+            
 
     @property
     def is_alive(self):
@@ -79,6 +128,7 @@ class Unit:
         for rect in (self.collision_rect, self.search_rect, self.attack_rect):
             rect.center = self.position
 
+
     def create_rectangles(self):
         size = self.size
         search_size = self.search_range + size
@@ -89,11 +139,21 @@ class Unit:
         self.attack_rect= pygame.Rect(0, 0, attack_size, attack_size)
         self.set_rect_position()
 
-    def attack_target(self, current_time):
+
+    def attack_target(self, opposing_team, current_time):
         target= self.target
         if isinstance(target, Unit):
             if self.attack_rect.colliderect(target.collision_rect) and timer(self.attack_time, self.attack_speed, current_time):
-                target.change_health(-self.damage)
+                self.action.append("attacked")
+                if not "no attack" in self.flags:
+                    if isinstance(self.damage, Area_attack_object):
+                        self.damage.set_rect(target.position, current_time)
+                        blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
+                        for unit, _ in blast_enemies:
+                            unit.change_health(-self.damage.damage)
+                    
+                    else:
+                        target.change_health(-self.damage)
                 self.attack_time= current_time
 
     def move(self):
@@ -102,8 +162,24 @@ class Unit:
         self.position = use_restraint(self.position, self.restraint, self.collision_rect.size)
         self.set_rect_position()
 
-    def sort_by_distance(self, unit_chunk):
-        return unit_chunk[1]
+    def colliding_units(self, opposing_team, collide_rect, grab_limit):
+        sort_by_distance = lambda x: x[1]
+        colliding_enemies = []
+
+        for enemy_unit in opposing_team:
+            colliding = collide_rect.colliderect(enemy_unit.collision_rect)
+            alive = enemy_unit.is_alive
+            target_all = self.search_unit_type == "all"
+            is_target_unit = enemy_unit.unit_type in self.search_unit_type
+
+            if colliding and alive and (is_target_unit or target_all):
+                distance = pygame.math.Vector2(self.position[0], self.position[0]).distance_to(enemy_unit.position)
+                colliding_enemies.append((enemy_unit, distance))
+        else:
+            colliding_enemies.sort(key= sort_by_distance)
+
+        return colliding_enemies
+
 
     def search_for_target(self, opposing_team, current_time):
         target = self.target
@@ -116,20 +192,9 @@ class Unit:
                 self.target= None
 
         else:
-            seen_enemies = []
-
-            for enemy_unit in opposing_team:
-                colliding = self.search_rect.colliderect(enemy_unit.collision_rect)
-                alive = enemy_unit.is_alive
-                target_all = self.search_unit_type == "all"
-                is_target_unit = enemy_unit.unit_type == self.search_unit_type
-
-                if colliding and alive and (is_target_unit or target_all):
-                    distance = pygame.math.Vector2(self.position[0], self.position[0]).distance_to(enemy_unit.position)
-                    seen_enemies.append((enemy_unit, distance))
+            seen_enemies = self.colliding_units(opposing_team, self.search_rect, "all")
             
             if seen_enemies:
-                seen_enemies.sort(key= self.sort_by_distance)
                 self.target= seen_enemies[0][0]
                 self.attack_time= current_time
 
@@ -160,7 +225,7 @@ class Unit:
         else:
             return fail_safe_velocity
 
-    def display_unit(self, display):
+    def display_unit(self, display, current_time, debug = False):
         pygame.draw.rect(display, self.color, self.collision_rect)
         
         team_color = {
@@ -168,17 +233,28 @@ class Unit:
             "player 2" : "blue"
         }
         pygame.draw.rect(display, team_color.get(self.team_name), self.collision_rect, 4)
-        pygame.draw.rect(display, "yellow", self.search_rect, 5)
-        pygame.draw.rect(display, "orange", self.attack_rect, 5)
         health_text_pos= [self.position[0], self.position[1] + 5 + self.size/2]
         quick_display_text(display, f"{self.health} \ {self.max_health}", "white",health_text_pos,size=10)
-        """
-        target_text_pos= [self.position[0], self.position[1] + 15 + self.size/2]
-        if isinstance(self.target, Unit):
-            quick_display_text(display, self.target.name, "white", target_text_pos, size=10)
-        else:
-            quick_display_text(display, self.target, "white", target_text_pos, size=10)"""
+        
+        if isinstance(self.damage, Area_attack_object):
+            self.damage.display_rect(display, current_time, 5)
+        
+        if debug:
+            pygame.draw.rect(display, "yellow", self.search_rect, 5)
+            pygame.draw.rect(display, "orange", self.attack_rect, 5)
+            target_text_pos= [self.position[0], self.position[1] + 15 + self.size/2]
+            if isinstance(self.target, Unit):
+                quick_display_text(display, self.target.name, "white", target_text_pos, size=10)
+            else:
+                quick_display_text(display, self.target, "white", target_text_pos, size=10)
 
+##############################################################################################################################################
+#################################################################### Unit ####################################################################
+##############################################################################################################################################
+
+#############################################################################################################################################
+################################################################# Activator #################################################################
+#############################################################################################################################################
 class Activator:
     def __init__(
             # General info
@@ -186,61 +262,52 @@ class Activator:
             # activation
             activation_type, condition, effects,
             # settings
-            destroy_on_use):
+            destroy_on_use, time):
         # general information
         self.name= name
         self.description= desc
 
         self.activation_type= activation_type
         self.condition= condition
+        
+        # timer specific
+        self.start_time= time
+        
         self.effects= effects
         self.destroy_on_use= destroy_on_use
         self.not_used= True
 
+#############################################################################################################################################
+################################################################# Activator #################################################################
+#############################################################################################################################################
 
-def create_unit(unit_name):
-    wanted_unit = units.get(unit_name)
-    if wanted_unit:
-        return Unit(wanted_unit[0], wanted_unit[1], wanted_unit[2], wanted_unit[3], wanted_unit[4], wanted_unit[5], wanted_unit[6], wanted_unit[7], wanted_unit[8], wanted_unit[9], wanted_unit[10], wanted_unit[11], wanted_unit[12])
+##########
+# attack
+##########
 
-def create_activator(activator_name):
-    wanted_activator = activators.get(activator_name)
-    if wanted_activator:
-        return Activator(wanted_activator[0], wanted_activator[1], 
-                         wanted_activator[2], wanted_activator[3], wanted_activator[4], wanted_activator[5])
+class Area_attack_object:
+    def __init__(self, damage, size, target_limit):
+        self.damage= damage
+        self.size= size
+        self.target_limit= target_limit
 
-activators= {
-    "crown rage" : ("Crown rage", "When the game goes into rush mode. The crown will start moving and attack the opposing crown",
-                    "game state", "rush", (["walk_speed", .2], ["search_unit_type", "noble"], ["attack_range", 40]), True)
-}
+        self.collision_rect = pygame.Rect(0, 0, size, size)
+        self.start_time= 0
+        self.show_collision= False
 
-#
-units= {
-    "crown": ("Crown", "noble", [0, 0], 200, "yellow", 
-              [200, 200], 0, 2, 25,
-              "all", 200, 200, ["crown rage"]),
-
-    "dagger": ("Dagger", "unit", [0, 0], 20, "Grey",
-               [4, 4], .8, 1, 2,
-               "all", 200, 20, []),
-
-    "shield": ("Shield", "unit", [0, 0], 40, "Cyan",
-               [30, 30], .5, 3, 0,
-               "all", 200, 50, []),
-
-    "bow": ("Bow", "unit", [0, 0], 20, "Brown",
-            [4, 4], .5, 2, 2,
-            "all", 200, 150, []),
+    def set_rect(self, position, current_time):
+        self.collision_rect.center= position
+        self.start_time= current_time
+        self.show_collision= True
     
-    "wall": ("Wall", "unit", [0, 0], 60, "Tan",
-             [60, 60], 0, 1, 0,
-             "all", 200, 20, []),
-    
-    "sword": ("Sword", "noble", [0, 0], 40, "Red",
-              [20, 20], 1, 1.5, 5,
-              "all", 200, 30, []),
-    
-    "ballista": ("Ballista", "unit", [0, 0], 40, "Purple",
-                 [15, 15], 0, 2.5, 10,
-                 "all", 300, 200, [])
-}
+    def display_rect(self, display, current_time, length):
+        if self.show_collision:
+            print("displaying radius")
+            pygame.draw.rect(display, "white", self.collision_rect, 4)
+            if timer(self.start_time, length, current_time):
+                self.show_collision= False
+
+
+##########
+# attack #
+##########

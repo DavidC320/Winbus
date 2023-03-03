@@ -20,7 +20,9 @@ So here is what I was thinking of using a matrix system to do this.
 To get this to work I need to temporarily initialize the units to get their size so that it can be used in positioning.
 Here is how it works the game will get the row length and column length
 
-Solution #1
+---
+
+### Solution #1
 
 The problem with creating units is that the position is set as center which makes topleft useless so the x and y would need to be halved.
 
@@ -51,3 +53,28 @@ The problem with creating units is that the position is set as center which make
 
 
 I need to make a test file to do this.
+This will not work do to
+
+---
+
+### Solution #2
+
+I need to get the offsets via blah blah blah
+
+40 40 40
+
+20 "here" 20 | 20 "here" 20 | 20 "here" 20
+-80 + 40 = -40 + 40 = 0 + 40 = 40
+-40 0 40
+
+40 40
+
+20 "here" 20 | 20 "here" 20
+-20 20
+
+
+40 40 40 40
+20 " 20 | 20 " 20 | 20 " 20 | 20 " 20
+-60 -20 20 60
+
+

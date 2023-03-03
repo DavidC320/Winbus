@@ -21,8 +21,8 @@ class Winbus:
         self.player_2_field= (pygame.Rect(600, 0, 600, 400), "blue")
 
         # teams
-        self.player_1= User_team(self.battle_field[0], "player 1", "player_1")
-        self.player_2= User_team(self.battle_field[0], "player 2", "player_2")
+        self.player_1= User_team("player 1", "player_1")
+        self.player_2= User_team("player 2", "player_2")
 
         # game state
         self.game_state= "fight"
@@ -67,10 +67,8 @@ class Winbus:
     def set_up_teams(self):
         self.game_start = self.current_time
         self.game_state = "fight"
-        self.player_1.cursor.set_up([100, 200], "#ab6767", self.player_1_field[0])
-        self.player_1.set_up_decks([100, 200], self.current_time)
-        self.player_2.cursor.set_up([1100, 200], "#6668aa", self.player_2_field[0])
-        self.player_2.set_up_decks([1100, 200], self.current_time)
+        self.player_1.set_up_decks([100, 200], self.current_time, self.battle_field[0], self.player_1_field[0], "#ab6767")
+        self.player_2.set_up_decks([1100, 200], self.current_time, self.battle_field[0], self.player_2_field[0], "#6668aa")
 
 
     def team_control(self, event):
@@ -80,6 +78,7 @@ class Winbus:
 
     def team_cursor_controller(self):
         for team in (self.player_1, self.player_2):
+            team.current_time = self.current_time - self.game_start
             team.player_cursor_controller()
 
         
@@ -94,7 +93,7 @@ class Winbus:
 
     def display_team_units(self):
         for team, deck_pos in ((self.player_1, (300, 700)), (self.player_2, (900, 700))):
-            team.display_field_units(self.display)
+            team.display_field_units(self.display, self.current_time)
             team.cursor.display_cursor(self.display)
             team.display_held_cards(self.display, deck_pos)
 

@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1.1
+Version 2.0
 
 Version name
 
-Armies
+Menus
 
 ## What is this game
 

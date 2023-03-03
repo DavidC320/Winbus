@@ -1,14 +1,14 @@
 # 2/21/2023
-from unit_base import create_unit, units
-from Card_base import create_card, cards
+from unit_base import create_unit
+from Card_base import create_card
+from Game_data import cards
 from misc_funtions import use_restraint, timer, quick_display_text
 
 import pygame
-import random
 from random import choice
 
 class User_team:
-    def __init__(self, field_rect, team_name, control_map):
+    def __init__(self, team_name, control_map):
         # cards
         self.held_cards= []
         self.deck= []
@@ -16,6 +16,9 @@ class User_team:
         self.max_held_cards = 5
         self.max_deck = 10
         self.selected_card= 0
+        
+        # time
+        self.current_time = 0
 
         # coins
         self.coins= 7
@@ -27,8 +30,8 @@ class User_team:
         self.control_map= control_map
 
         # cursor
-        self.cursor = User_cursor(control_map)
-        self.field_rect= field_rect
+        self.cursor = User_cursor()
+        self.field_rect= None
 
         # display
         self.field_units= []
@@ -55,7 +58,7 @@ class User_team:
                 "right": keys[pygame.K_KP_6],
                 "last card": pygame.K_KP_7,
                 "next card": pygame.K_KP_9,
-                "use card" : pygame.K_KP3
+                "use card" : pygame.K_KP1
                 }
         }
         return controls.get(self.control_map)
@@ -97,7 +100,10 @@ class User_team:
         current_card= self.held_cards[self.selected_card]
         if current_card.coin_cost <= self.coins:
             self.coins -= current_card.coin_cost
-            self.add_unit(current_card.unit, self.cursor.position)
+            for row in current_card.filtered_matrix:
+                for unit, offset in row:
+                    pos = [self.cursor.position[0] + offset[0], self.cursor.position[1] + offset[1]]
+                    self.add_unit(unit, pos)
 
             self.discard_pile.append(current_card)
             self.held_cards.pop(self.selected_card)
@@ -115,23 +121,19 @@ class User_team:
 
     ##########
     # set up #
-    def set_up_decks(self, crown_pos, current_time):
-        for card_list in (self.deck, self.held_cards, self.discard_pile,self.field_units):
-            card_list.clear()
+    def set_up_decks(self, crown_pos, current_time, field_rect, cursor_rect, cursor_color):
+        self.field_rect = field_rect
 
         self.coins = 7
         self.selected_card = 0
         self.coin_gen_start= current_time
 
         self.add_unit("crown", crown_pos)
+        
+        self.cursor.set_up(crown_pos, cursor_color, cursor_rect)
+        
         self.generate_cards()
         self.select_cards_for_hands()
-
-        """for unit_name in ["dagger", "shield", "bow"]: # debugging
-            rect_place = self.cursor.restraint
-            x = random.randint(rect_place.left, rect_place.right)
-            y = random.randint(rect_place.top, rect_place.bottom)
-            self.add_unit(unit_name, [x, y])"""
         
     
     def select_cards_for_hands(self):
@@ -146,7 +148,8 @@ class User_team:
 
     def generate_cards(self):
         card_list = list(cards.keys())
-        for _ in range(self.max_deck):
+        missing_cards = self.max_deck - len(self.deck)
+        for _ in range(missing_cards):
             name = choice(card_list)
             self.add_card(name)
 
@@ -168,7 +171,7 @@ class User_team:
 
 
     def add_unit(self, unit_name, position):
-        unit = create_unit(unit_name)
+        unit = create_unit(unit_name, self.current_time)
         if not unit:
             print("%s does not exist." % unit_name)
 
@@ -182,9 +185,9 @@ class User_team:
 
     ###########
     # display #
-    def display_field_units(self, display):
+    def display_field_units(self, display, current_time):
         for unit in self.field_units:
-            unit.display_unit(display)
+            unit.display_unit(display, current_time)
 
 
     def display_held_cards(self, display, center_position):
@@ -212,13 +215,14 @@ class User_team:
     def move_field_units(self, velocity, opposing_team, current_time, game_state):
         for unit in self.field_units:
             if unit.is_alive: # if their alive
-                unit.check_properties(game_state)
+                unit.check_properties(game_state, current_time)
                 unit.search_for_target(opposing_team, current_time)
                 unit.change_velocity(velocity)
-                unit.attack_target(current_time)
+                unit.attack_target(opposing_team, current_time)
                 unit.move()
 
             else: # if their dead
+                unit.check_flags(opposing_team, current_time)
                 self.field_units.pop(self.field_units.index(unit))
 
 
@@ -227,12 +231,11 @@ class User_team:
 ############################################################################################################################################
 
 class User_cursor:
-    def __init__(self, control_map):
+    def __init__(self):
         self.position= [0, 0]
         self.collision_rect= pygame.Rect(0, 0, 60, 60)
         self.velocity= [0, 0]
         self.speed= 5
-        self.control_map= control_map
         self.color= "green"
         self.restraint = None
 
