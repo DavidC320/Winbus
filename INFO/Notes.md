@@ -51,7 +51,6 @@ The problem with creating units is that the position is set as center which make
     -20 20
     0
 
-
 I need to make a test file to do this.
 This will not work do to
 
@@ -72,9 +71,6 @@ I need to get the offsets via blah blah blah
 20 "here" 20 | 20 "here" 20
 -20 20
 
-
 40 40 40 40
 20 " 20 | 20 " 20 | 20 " 20 | 20 " 20
 -60 -20 20 60
-
-

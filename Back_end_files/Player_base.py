@@ -10,6 +10,8 @@ from random import choice
 class User_team:
     def __init__(self, team_name, control_map):
         # cards
+        self.init_deck = []
+
         self.held_cards= []
         self.deck= []
         self.discard_pile= []
@@ -39,29 +41,49 @@ class User_team:
 
     @property
     def player_control_configuration(self):
-        keys = pygame.key.get_pressed()
         controls= {
             "player_1": {
-                "up" : keys[pygame.K_w],
-                "down" : keys[pygame.K_s],
-                "left": keys[pygame.K_a],
-                "right": keys[pygame.K_d],
+                "up" : pygame.K_w,
+                "down" : pygame.K_s,
+                "left": pygame.K_a,
+                "right": pygame.K_d,
                 "last card": pygame.K_q,
                 "next card": pygame.K_e,
                 "use card": pygame.K_c
                 },
 
             "player_2": {
-                "up" : keys[pygame.K_KP_8],
-                "down" : keys[pygame.K_KP_5],
-                "left": keys[pygame.K_KP_4],
-                "right": keys[pygame.K_KP_6],
+                "up" : pygame.K_KP_8,
+                "down" : pygame.K_KP_5,
+                "left": pygame.K_KP_4,
+                "right": pygame.K_KP_6,
                 "last card": pygame.K_KP_7,
                 "next card": pygame.K_KP_9,
                 "use card" : pygame.K_KP1
                 }
         }
-        return controls.get(self.control_map)
+        controls_map= {
+            "player_1": {
+                "up" : "W",
+                "down" : "S",
+                "left": "A",
+                "right": "D",
+                "last card": "Q",
+                "next card": "E",
+                "use card": "C"
+                },
+
+            "player_2": {
+                "up" : "8",
+                "down" : "5",
+                "left": "4",
+                "right": "6",
+                "last card": "7",
+                "next card": "9",
+                "use card" : "1"
+                }
+        }
+        return controls.get(self.control_map), controls_map.get(self.control_map)
     
     ##########
     # checks #
@@ -83,7 +105,7 @@ class User_team:
         self.cursor.controller(control)
 
     def player_controller(self, event):
-        control = self.player_control_configuration
+        control = self.player_control_configuration[0]
 
         if event.type == pygame.KEYDOWN:
             if event.key == control.get("last card") and self.held_cards:
@@ -123,6 +145,7 @@ class User_team:
     # set up #
     def set_up_decks(self, crown_pos, current_time, field_rect, cursor_rect, cursor_color):
         self.field_rect = field_rect
+        self.field_units.clear()
 
         self.coins = 7
         self.selected_card = 0
@@ -148,10 +171,13 @@ class User_team:
 
     def generate_cards(self):
         card_list = list(cards.keys())
-        missing_cards = self.max_deck - len(self.deck)
+        missing_cards = self.max_deck - len(self.init_deck)
+        for card_name in self.init_deck:
+            self.add_card(card_name)
         for _ in range(missing_cards):
             name = choice(card_list)
             self.add_card(name)
+        print(len(self.deck))
 
 
     def generate_coins(self, current_time):
@@ -191,9 +217,15 @@ class User_team:
 
 
     def display_held_cards(self, display, center_position):
+        control_map = self.player_control_configuration[1]
         card_holder_rect = pygame.Rect(0, 0, 450, 150)
         card_holder_rect.center = center_position
         pygame.draw.rect(display, "white", card_holder_rect, 5)
+        quick_display_text(display, control_map.get("last card"), "white", card_holder_rect.midleft, "midright", back_ground_color= "black")
+        quick_display_text(display, control_map.get("next card"), "white", card_holder_rect.midright, "midleft", back_ground_color= "black")
+        quick_display_text(display, "%s: Use card" % control_map.get("use card"), "white", card_holder_rect.midtop, "midbottom", back_ground_color= "black")
+
+
         x, y = card_holder_rect.topleft
         card_width = card_holder_rect.width/self.max_held_cards
         card_hight = card_holder_rect.height
@@ -235,6 +267,7 @@ class User_cursor:
         self.position= [0, 0]
         self.collision_rect= pygame.Rect(0, 0, 60, 60)
         self.velocity= [0, 0]
+        self.control_map= None
         self.speed= 5
         self.color= "green"
         self.restraint = None
@@ -242,22 +275,23 @@ class User_cursor:
     ##############
     # controller #
     def controller(self, controller_configuration):
-        control = controller_configuration
+        control, self.control_map = controller_configuration
+        keys = pygame.key.get_pressed()
         
-        if control.get("up") and control.get("down"):
+        if keys[control.get("up")] and keys[control.get("down")]:
             self.velocity[1] = 0
-        elif control.get("up"):
+        elif keys[control.get("up")]:
             self.velocity[1] = -1
-        elif control.get("down"):
+        elif keys[control.get("down")]:
             self.velocity[1] = 1
         else:
             self.velocity[1] = 0
             
-        if control.get("left") and control.get("right"):
+        if keys[control.get("left")] and keys[control.get("right")]:
             self.velocity[0] = 0
-        elif control.get("left"):
+        elif keys[control.get("left")]:
             self.velocity[0] = -1
-        elif control.get("right"):
+        elif keys[control.get("right")]:
             self.velocity[0] = 1
         else:
             self.velocity[0] = 0
@@ -269,6 +303,12 @@ class User_cursor:
     def display_cursor(self, display):
         self.collision_rect.center= self.position
         pygame.draw.rect(display, self.color, self.collision_rect, 6)
+
+        if self.control_map:
+            quick_display_text(display, self.control_map.get("left"), "white", self.collision_rect.midleft, "midright", back_ground_color= "black")
+            quick_display_text(display, self.control_map.get("right"), "white", self.collision_rect.midright, "midleft", back_ground_color= "black")
+            quick_display_text(display, self.control_map.get("up"), "white", self.collision_rect.midtop, "midbottom", back_ground_color= "black")
+            quick_display_text(display, self.control_map.get("down"), "white", self.collision_rect.midbottom, "midtop", back_ground_color= "black")
         
     def set_up(self, position, color, restraint):
         self.position= position

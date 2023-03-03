@@ -50,36 +50,14 @@ class Winbus:
             return True
         else:
             return False
-
-    def change_game_state(self):
-        if self.check_dead_team() and self.game_state != "finished":
-            self.game_state= "finished"
-            self.show_start= self.current_time
-
-        elif self.game_state == "finished" and timer(self.show_start, self.next_round, self.current_time):
-            self.game_start = self.current_time
-            self.set_up_teams()
-
-        elif timer(self.game_start, self.rush_down, self.current_time) and self.game_state not in ("rush", "finished") :
-            self.game_state= "rush"
-
-
+        
+    ###########
+    # setting #
     def set_up_teams(self):
         self.game_start = self.current_time
         self.game_state = "fight"
         self.player_1.set_up_decks([100, 200], self.current_time, self.battle_field[0], self.player_1_field[0], "#ab6767")
         self.player_2.set_up_decks([1100, 200], self.current_time, self.battle_field[0], self.player_2_field[0], "#6668aa")
-
-
-    def team_control(self, event):
-        for team in (self.player_1, self.player_2):
-            team.player_controller(event)
-
-
-    def team_cursor_controller(self):
-        for team in (self.player_1, self.player_2):
-            team.current_time = self.current_time - self.game_start
-            team.player_cursor_controller()
 
         
     def team_move(self):
@@ -91,12 +69,77 @@ class Winbus:
             team.move_field_units(velocity, opposing_units, self.current_time, self.game_state)
 
 
+    def change_game_state(self):
+        if self.check_dead_team() and self.game_state != "finished":
+            self.game_state= "finished"
+            self.show_start= self.current_time
+
+        elif self.game_state == "finished" and timer(self.show_start, self.next_round, self.current_time):
+            self.game_start = self.current_time
+            self.set_up_teams()
+
+        elif timer(self.game_start, self.rush_down, self.current_time) and self.game_state not in ("rush", "finished"):
+            self.game_state= "rush"
+    # setting #
+    ###########
+
+    ##############
+    # controller #
+    def team_control(self, event):
+        for team in (self.player_1, self.player_2):
+            team.player_controller(event)
+
+
+    def team_cursor_controller(self):
+        for team in (self.player_1, self.player_2):
+            team.current_time = self.current_time - self.game_start
+            team.player_cursor_controller()
+    # controller #
+    ##############
+
+    ###########
+    # display #
     def display_team_units(self):
         for team, deck_pos in ((self.player_1, (300, 700)), (self.player_2, (900, 700))):
             team.display_field_units(self.display, self.current_time)
             team.cursor.display_cursor(self.display)
             team.display_held_cards(self.display, deck_pos)
 
+
+    def display_team_data(self):
+        for field, team in ((self.player_1_field,self.player_1), (self.player_2_field,self.player_2)):
+            x, y = field[0].center
+            y += 220
+            pos = [x, y]
+            quick_display_text(self.display, f"coins: {team.coins}", "white", pos)
+            y += 20
+            pos = [x, y]
+            quick_display_text(self.display, f"Deck: {len(team.deck)}", "white", pos)
+            y += 20
+            pos = [x, y]
+            quick_display_text(self.display, f"discard: {len(team.discard_pile)}", "white", pos)
+
+
+    def display_rectangles(self):
+        for rect, color in [self.battle_field, self.player_1_field, self.player_2_field]:
+            pygame.draw.rect(self.display, color, rect, 2)
+
+
+    def display_ui(self):
+        self.display.fill("Black")
+        self.display_rectangles()
+        self.display_team_units()
+        quick_display_text(self.display, int((self.current_time - self.game_start)/1000), "white", [600, 430])
+        self.display_team_data()
+        if self.game_state == "finished":
+            x, y = self.screen_size
+            quick_display_text(self.display, "Finished, The winner is...", "Yellow", [x/2, y/2- 50], size= 40)
+            if timer(self.show_start, self.show_winner, self.current_time):
+                quick_display_text(self.display, self.winner_text, "Yellow", [x/2, y/2+ 50], size= 40)
+
+        pygame.display.update()
+    # display #
+    ###########
 
     def play_wimbus(self):
         run = True
@@ -117,35 +160,7 @@ class Winbus:
                 self.team_cursor_controller()
                 self.team_move()
 
-            self.display.fill("Black")
-            self.display_rectangles()
-            self.display_team_units()
-            quick_display_text(self.display, int((self.current_time - self.game_start)/1000), "white", [600, 430])
-            
-            for field, team in ((self.player_1_field,self.player_1), (self.player_2_field,self.player_2)):
-                x, y = field[0].center
-                y += 220
-                pos = [x, y]
-                quick_display_text(self.display, f"coins: {team.coins}", "white", pos)
-                y += 20
-                pos = [x, y]
-                quick_display_text(self.display, f"Deck: {len(team.deck)}", "white", pos)
-                y += 20
-                pos = [x, y]
-                quick_display_text(self.display, f"discard: {len(team.discard_pile)}", "white", pos)
-
-            if self.game_state == "finished":
-                x, y = self.screen_size
-                quick_display_text(self.display, "Finished, The winner is...", "Yellow", [x/2, y/2- 50], size= 40)
-                if timer(self.show_start, self.show_winner, self.current_time):
-                    quick_display_text(self.display, self.winner_text, "Yellow", [x/2, y/2+ 50], size= 40)
-
-            pygame.display.update()
-
-
-    def display_rectangles(self):
-        for rect, color in [self.battle_field, self.player_1_field, self.player_2_field]:
-            pygame.draw.rect(self.display, color, rect, 2)
+            self.display_ui()
 
 
 game = Winbus()

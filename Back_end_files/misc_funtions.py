@@ -13,14 +13,19 @@ def create_text(text, color, position, mode = "center", size = 22, font = "Brita
         text_rect = text.get_rect(midleft=position)
     elif mode == "midright":
         text_rect = text.get_rect(midright=position)
+    elif mode == "midtop":
+        text_rect = text.get_rect(midtop=position)
+    elif mode == "midbottom":
+        text_rect = text.get_rect(midbottom=position)
     elif mode == "topleft":
         text_rect = text.get_rect(topleft=position)
 
     return(text, text_rect)
 
-def quick_display_text(display, text, color, position, mode = "center", size = 22, font = "Britannic", just_rects= False):
+def quick_display_text(display, text, color, position, mode = "center", size = 22, font = "Britannic", just_rects= False, back_ground_color= None):
         text, text_rect = create_text(text, color, position, mode, size, font, just_rects)
-
+        if back_ground_color:
+            pygame.draw.rect(display, back_ground_color, text_rect)
         display.blit(text, text_rect)
         
 def use_restraint( position, rectangle, size):

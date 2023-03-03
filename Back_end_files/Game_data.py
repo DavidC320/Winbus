@@ -9,7 +9,7 @@ cards = {
     "ballista": ("Ballista", "buildings", 4, [["ballista"]], 0),
     "wheels": ("Wheels", "unit", 3, [["wheel", "wheel"], ["wheel", "wheel"]], 10),
     "catapult": ("Catapult", "unit", 4, [["catapult"]], 0),
-    "bomb": ("Bomb", "unit", 1, [["bomb"]], 0)
+    "bomb": ("Bomb", "unit", 1, [["bomb"]], 0),
 }
 
 
