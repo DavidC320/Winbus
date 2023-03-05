@@ -1,15 +1,22 @@
 # 3/1/2023
 
 cards = {
-    "daggers" : ("Daggers", "unit", 2, [["dagger"], ["dagger"], ["dagger"]], 0),
-    "bows" : ("Bows", "unit", 2, [["bow"], ["bow"]], 0),
-    "shield" : ("Shield", "unit", 3, [["shield"]], 0),
-    "wall" : ("Wall", "buildings", 5, [["wall"]], 0),
-    "sword": ("Sword", "unit", 6, [["sword"]], 0),
-    "ballista": ("Ballista", "buildings", 4, [["ballista"]], 0),
-    "wheels": ("Wheels", "unit", 3, [["wheel", "wheel"], ["wheel", "wheel"]], 10),
-    "catapult": ("Catapult", "unit", 4, [["catapult"]], 0),
-    "bomb": ("Bomb", "unit", 1, [["bomb"]], 0),
+    "card units":{
+        "daggers" : ("Daggers", "unit", 2, [["dagger"], ["dagger"], ["dagger"]], 0),
+        "bows" : ("Bows", "unit", 2, [["bow"], ["bow"]], 0),
+        "shield" : ("Shield", "unit", 3, [["shield"]], 0),
+        "wall" : ("Wall", "buildings", 5, [["wall"]], 0),
+        "sword": ("Sword", "unit", 6, [["sword"]], 0),
+        "ballista": ("Ballista", "buildings", 4, [["ballista"]], 0),
+        "wheels": ("Wheels", "unit", 3, [["wheel", "wheel"], ["wheel", "wheel"]], 10),
+        "catapult": ("Catapult", "unit", 4, [["catapult"]], 0),
+        "bomb": ("Bomb", "unit", 1, [["bomb"]], 0),
+        },
+
+    "card crowns": {
+        "crown": ("Crown", "noble", 3, [["crown"]], 0),
+        "twins": ("twins", "noble", 3, [["crown twin"], ["crown twin"]], 30)
+    }
 }
 
 
@@ -30,6 +37,10 @@ activators= {
 units= {
     "crown": ("Crown", "noble", [], 200, "yellow", 
               [200, 200], 0, 2, 25,
+              "all", 200, 200, ["crown rage"]),
+
+    "crown twin": ("Crown duo", "noble", [], 100, "yellow", 
+              [100, 100], 0, 1, 9,
               "all", 200, 200, ["crown rage"]),
 
     "dagger": ("Dagger", "unit", [], 20, "Grey",

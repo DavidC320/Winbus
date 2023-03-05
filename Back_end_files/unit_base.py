@@ -74,7 +74,6 @@ class Unit:
         self.action= []
 
     def activation(self, activator, current_time):
-        print(activator.effects)
         for stat, operation, change in activator.effects:
             if operation == "set":
                 self.__dict__[stat]= change
@@ -173,7 +172,7 @@ class Unit:
             is_target_unit = enemy_unit.unit_type in self.search_unit_type
 
             if colliding and alive and (is_target_unit or target_all):
-                distance = pygame.math.Vector2(self.position[0], self.position[0]).distance_to(enemy_unit.position)
+                distance = pygame.math.Vector2(self.position[0], self.position[1]).distance_to(enemy_unit.position)
                 colliding_enemies.append((enemy_unit, distance))
         else:
             colliding_enemies.sort(key= sort_by_distance)
@@ -302,7 +301,6 @@ class Area_attack_object:
     
     def display_rect(self, display, current_time, length):
         if self.show_collision:
-            print("displaying radius")
             pygame.draw.rect(display, "white", self.collision_rect, 4)
             if timer(self.start_time, length, current_time):
                 self.show_collision= False

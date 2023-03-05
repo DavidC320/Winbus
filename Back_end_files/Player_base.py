@@ -10,6 +10,8 @@ from random import choice
 class User_team:
     def __init__(self, team_name, control_map):
         # cards
+        self.crown= "crown"
+
         self.init_deck = []
 
         self.held_cards= []
@@ -23,7 +25,7 @@ class User_team:
         self.current_time = 0
 
         # coins
-        self.coins= 7
+        self.coins= 10
         self.coin_max = 10
         self.coin_generation= 2
         self.coin_gen_start= 0
@@ -115,21 +117,21 @@ class User_team:
                 self.change_selected_card(1)
 
             if event.key == control.get("use card") and self.held_cards:
-                self.use_card()
+                self.use_card(self.held_cards[self.selected_card], self.cursor.position)
 
 
-    def use_card(self):
-        current_card= self.held_cards[self.selected_card]
+    def use_card(self, current_card, pos, add_to_deck= True):
         if current_card.coin_cost <= self.coins:
             self.coins -= current_card.coin_cost
             for row in current_card.filtered_matrix:
                 for unit, offset in row:
-                    pos = [self.cursor.position[0] + offset[0], self.cursor.position[1] + offset[1]]
-                    self.add_unit(unit, pos)
+                    new_pos = [pos[0] + offset[0], pos[1] + offset[1]]
+                    self.add_unit(unit, new_pos)
 
-            self.discard_pile.append(current_card)
-            self.held_cards.pop(self.selected_card)
-            self.select_cards_for_hands()
+            if add_to_deck:
+                self.discard_pile.append(current_card)
+                self.held_cards.pop(self.selected_card)
+                self.select_cards_for_hands()
 
 
     def change_selected_card(self, number):
@@ -146,12 +148,16 @@ class User_team:
     def set_up_decks(self, crown_pos, current_time, field_rect, cursor_rect, cursor_color):
         self.field_rect = field_rect
         self.field_units.clear()
+        self.held_cards.clear()
+        self.deck.clear()
+        self.discard_pile.clear()
 
-        self.coins = 7
+        self.coins = 10
         self.selected_card = 0
         self.coin_gen_start= current_time
 
-        self.add_unit("crown", crown_pos)
+        crown_card = create_card(self.crown, "card crowns")
+        self.use_card(crown_card, crown_pos, False)
         
         self.cursor.set_up(crown_pos, cursor_color, cursor_rect)
         
@@ -170,14 +176,13 @@ class User_team:
 
 
     def generate_cards(self):
-        card_list = list(cards.keys())
+        card_list = list(cards.get("card units").keys())
         missing_cards = self.max_deck - len(self.init_deck)
         for card_name in self.init_deck:
             self.add_card(card_name)
         for _ in range(missing_cards):
             name = choice(card_list)
             self.add_card(name)
-        print(len(self.deck))
 
 
     def generate_coins(self, current_time):
@@ -246,17 +251,17 @@ class User_team:
 
     def move_field_units(self, velocity, opposing_team, current_time, game_state):
         for unit in self.field_units:
-            if unit.is_alive: # if their alive
-                unit.check_properties(game_state, current_time)
-                unit.search_for_target(opposing_team, current_time)
-                unit.change_velocity(velocity)
-                unit.attack_target(opposing_team, current_time)
-                unit.move()
+            unit.check_properties(game_state, current_time)
+            unit.search_for_target(opposing_team, current_time)
+            unit.change_velocity(velocity)
+            unit.attack_target(opposing_team, current_time)
+            unit.move()
 
-            else: # if their dead
+    def check_field_units(self, opposing_team, current_time):
+        for unit in self.field_units:
+            if not unit.is_alive:
                 unit.check_flags(opposing_team, current_time)
                 self.field_units.pop(self.field_units.index(unit))
-
 
 ############################################################################################################################################
 ################################################################## Cursor ##################################################################

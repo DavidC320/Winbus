@@ -49,7 +49,6 @@ class Unit_container:
             for unit in row:
                 if unit:
                     filtered_unit= [unit, [starting_x_pos, starting_y_pos]]
-                    print(filtered_unit)
                     filtered_row.append(filtered_unit)
                 starting_x_pos += (largest_size + padding)
             filtered_matrix.append(filtered_row)

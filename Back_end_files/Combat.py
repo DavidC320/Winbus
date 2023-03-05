@@ -1,6 +1,7 @@
 # 3/2/2023
 import pygame
 from Player_base import User_team
+from Music_manager import Music_manager
 from misc_funtions import timer, quick_display_text
 
 pygame.init()
@@ -12,6 +13,8 @@ class Combat:
         self.clock= clock
         self.current_time= 0
         self.main = main
+
+        self.music= Music_manager("Music")
 
         # ui
         self.battle_field= (pygame.Rect(0, 0, 1200, 400), "white")
@@ -52,6 +55,8 @@ class Combat:
     ###########
     # setting #
     def set_up_teams(self):
+        self.music.play_index_music(3)
+        self.current_time= pygame.time.get_ticks()
         self.game_start = self.current_time
         self.game_state = "fight"
         self.player_1.set_up_decks([100, 200], self.current_time, self.battle_field[0], self.player_1_field[0], "#ab6767")
@@ -66,6 +71,8 @@ class Combat:
             team.generate_coins(self.current_time)
             team.move_field_units(velocity, opposing_units, self.current_time, self.game_state)
 
+        self.player_1.check_field_units(self.player_2.field_units, self.current_time)
+        self.player_2.check_field_units(self.player_1.field_units, self.current_time)
 
     def change_game_state(self):
         if self.check_dead_team() and self.game_state != "finished":
@@ -78,6 +85,7 @@ class Combat:
 
         elif timer(self.game_start, self.rush_down, self.current_time) and self.game_state not in ("rush", "finished"):
             self.game_state= "rush"
+            self.music.play_index_music(2)
     # setting #
     ###########
 

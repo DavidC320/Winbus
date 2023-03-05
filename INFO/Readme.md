@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1.0.0
+Version 1.1.0
 
 Version name
 
-Winbus
+Card selecting
 
 ## What is this game
 

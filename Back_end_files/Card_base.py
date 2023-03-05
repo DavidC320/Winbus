@@ -43,7 +43,6 @@ class Card:
             for unit in row:
                 if unit:
                     filtered_unit= [unit, [starting_x_pos, starting_y_pos]]
-                    print(filtered_unit)
                     filtered_row.append(filtered_unit)
                 starting_x_pos += (largest_size + padding)
             filtered_matrix.append(filtered_row)
@@ -52,8 +51,8 @@ class Card:
         self.filtered_matrix = filtered_matrix
         self.collision_box = pygame.Rect(0, 0, largest_width, overall_hight)
         
-def create_card(name):
-    card = cards.get(name)
+def create_card(name, card_type="card units"):
+    card = cards.get(card_type).get(name)
     if card:
         return Card(card[0], card[1], card[2], card[3], card[4])
     
