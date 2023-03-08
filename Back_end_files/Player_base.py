@@ -92,7 +92,7 @@ class User_team:
     def team_dead(self):
         dead= True
         for unit in self.field_units:
-            if unit.unit_type == "noble":
+            if unit.unit_type in ["noble", "crown"]:
                 dead = False
                 break
         return dead
@@ -256,6 +256,9 @@ class User_team:
             unit.change_velocity(velocity)
             unit.attack_target(opposing_team, current_time)
             unit.move()
+            for unit_name, position in unit.stored_units:
+                self.add_unit(unit_name, position)
+            unit.stored_units.clear()
 
     def check_field_units(self, opposing_team, current_time):
         for unit in self.field_units:

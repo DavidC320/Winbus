@@ -56,6 +56,7 @@ class Unit:
 
         # searching
         self.search_unit_type= search_unit_type
+        self.search_unit_type.append("crown")
         self.search_range= search_range
         self.attack_range= attack_range
 
@@ -72,27 +73,37 @@ class Unit:
         self.restraint= None
         self.team_name= None
         self.action= []
+        self.targeting_crown= False
 
-    def activation(self, activator, current_time):
+        self.stored_units= []
+
+    def activation(self, activator):
         for stat, operation, change in activator.effects:
             if operation == "set":
                 self.__dict__[stat]= change
             elif operation == "change":
                 self.__dict__[stat] += change
+            elif operation == "spawn":
+                unit_name, offset = change
+                x, y = self.position
+                x_offset, y_offset = offset
+                new_x, new_y = x + x_offset, y + y_offset
+                self.stored_units.append((unit_name, [new_x, new_y]))
         if activator.destroy_on_use:
             activator.not_used = False
 
     def property_activator(self, activator, game_state, current_time):
-        if activator.activation_type == "game state" and activator.condition == game_state:
-            self.activation(activator, current_time)
-            self.create_rectangles()
-        elif activator.activation_type == "timer" and timer(activator.start_time, activator.condition, current_time):
+        activation_type = activator.activation_type
+        condition = activator.condition
+
+        check_game_state = activation_type == "game state" and condition == game_state
+        check_timer = activation_type == "timer" and timer(activator.start_time, condition, current_time)
+        check_actions = activation_type == "check actions" and condition in self.action
+
+        if check_game_state or check_timer or check_actions:
+            print(check_game_state, check_timer, check_actions)
             activator.start_time = current_time
-            self.activation(activator, current_time)
-            self.create_rectangles()
-            
-        elif activator.activation_type == "check actions" and activator.condition in self.action:
-            self.activation(activator, current_time)
+            self.activation(activator)
             self.create_rectangles()
             
         self.action.clear()
@@ -168,10 +179,11 @@ class Unit:
         for enemy_unit in opposing_team:
             colliding = collide_rect.colliderect(enemy_unit.collision_rect)
             alive = enemy_unit.is_alive
-            target_all = self.search_unit_type == "all"
+            target_all = "all" in self.search_unit_type
             is_target_unit = enemy_unit.unit_type in self.search_unit_type
+            target_crown = self.targeting_crown and enemy_unit.unit_type == "crown"
 
-            if colliding and alive and (is_target_unit or target_all):
+            if (colliding or target_crown) and alive and (is_target_unit or target_all):
                 distance = pygame.math.Vector2(self.position[0], self.position[1]).distance_to(enemy_unit.position)
                 colliding_enemies.append((enemy_unit, distance))
         else:
@@ -182,9 +194,18 @@ class Unit:
 
     def search_for_target(self, opposing_team, current_time):
         target = self.target
+        crowns = []
+        for enemy_unit in opposing_team:
+            is_a_crown = enemy_unit.unit_type == "crown"
+            p1_check= enemy_unit.position[0] < self.position[0] and self.team_name == "player 1"
+            p2_check= enemy_unit.position[0] > self.position[0] and self.team_name == "player 2"
+            if is_a_crown and (p1_check or p2_check):
+                crowns.append(enemy_unit)
+
+        self.targeting_crown = bool(crowns)
 
         if isinstance(target, Unit):
-            target_not_seen = not self.search_rect.colliderect(target.collision_rect)
+            target_not_seen = not (self.search_rect.colliderect(target.collision_rect) or self.targeting_crown)
             target_dead = not target.is_alive
             # print("%s from %s is colliding with target: %s, target is alive: %s" % (self.name, self.team_name, target_not_seen, target_dead))
             if target_not_seen or target_dead:
@@ -211,7 +232,7 @@ class Unit:
         if self.attack_rect.colliderect(target_col):
             return [0, 0]
     
-        elif self.search_rect.colliderect(target_col):
+        elif self.search_rect.colliderect(target_col) or self.targeting_crown:
             # Mattineau https://stackoverflow.com/questions/20044791/how-to-make-an-enemy-follow-the-player-in-pygame
             x, y = self.position
             tx, ty = target.position

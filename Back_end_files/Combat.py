@@ -14,7 +14,9 @@ class Combat:
         self.current_time= 0
         self.main = main
 
-        self.music= Music_manager("Music")
+        self.music= Music_manager("Music\\battle")
+        self.music_r= Music_manager("Music\\rush")
+        self.music_w= Music_manager("Music\\win")
 
         # ui
         self.battle_field= (pygame.Rect(0, 0, 1200, 400), "white")
@@ -55,7 +57,7 @@ class Combat:
     ###########
     # setting #
     def set_up_teams(self):
-        self.music.play_index_music(3)
+        self.music.play_music()
         self.current_time= pygame.time.get_ticks()
         self.game_start = self.current_time
         self.game_state = "fight"
@@ -76,6 +78,7 @@ class Combat:
 
     def change_game_state(self):
         if self.check_dead_team() and self.game_state != "finished":
+            self.music_w.play_music()
             self.game_state= "finished"
             self.show_start= self.current_time
 
@@ -85,7 +88,7 @@ class Combat:
 
         elif timer(self.game_start, self.rush_down, self.current_time) and self.game_state not in ("rush", "finished"):
             self.game_state= "rush"
-            self.music.play_index_music(2)
+            self.music_r.play_music()
     # setting #
     ###########
 
@@ -132,6 +135,7 @@ class Combat:
 
 
     def display_rectangles(self):
+        pygame.draw.rect(self.display, "#464d43", self.battle_field[0])
         for rect, color in [self.battle_field, self.player_1_field, self.player_2_field]:
             pygame.draw.rect(self.display, color, rect, 2)
 
@@ -144,9 +148,9 @@ class Combat:
         self.display_team_data()
         if self.game_state == "finished":
             x, y = self.display.get_size()
-            quick_display_text(self.display, "Finished, The winner is...", "Yellow", [x/2, y/2- 50], size= 40)
+            quick_display_text(self.display, "Finished, The winner is...", "Yellow", [x/2, y/2- 50], size= 40, back_ground_color="black")
             if timer(self.show_start, self.show_winner, self.current_time):
-                quick_display_text(self.display, self.winner_text, "Yellow", [x/2, y/2+ 50], size= 40)
+                quick_display_text(self.display, self.winner_text, "Yellow", [x/2, y/2+ 40], size= 40, back_ground_color="black")
 
         pygame.display.update()
     # display #

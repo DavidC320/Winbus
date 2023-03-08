@@ -1,5 +1,25 @@
 # Notes
 
+## Making building... Again
+
+So all my work got restarted after leaving school so that sucks, but I can remember what I need to do to get this back up again.
+
+### New effect condition
+
+The new effect to get this to work is the spawn effect since activators already exists.
+
+    (None, # skill is None because it's not used
+    "spawn", # operation 
+    ("unit name", # what unit to grab from the units list
+    [0, 0] # positional offset
+    ))
+
+### Send created units to the field
+
+in order to get these units to the field I need to get them to the player add unit funtion in the player team so to do that quickly I will add a new varable jsut to store the new units then get them from the unit in unit move
+
+---
+
 ## Getting unit groups working
 
 Winbus is now playable, The player can place units on the field and watch them fight the other players units. But I need to figure out a way to place multiple units using one card.

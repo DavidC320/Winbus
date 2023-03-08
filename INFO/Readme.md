@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1.1.0
+Version 1.2.0
 
 Version name
 
-Card selecting
+Healing units
 
 ## What is this game
 

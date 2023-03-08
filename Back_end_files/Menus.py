@@ -53,6 +53,14 @@ class Player_card_pick_sub_menu:
         self.display_selectable_cards(display, 22)
         quick_display_text(display, self.max_cards[self.list_mode], "green", (self.x_offset+ 175, 160))
 
+        if self.list_mode == 0:
+            quick_display_text(display, "Cards", "Yellow", self.card_description.center)
+        elif self.list_mode == 1:
+            quick_display_text(display, "Crowns", "Yellow", self.card_description.center)
+
+        quick_display_text(display, "%s: last list" % control_map.get("last card"), "white", self.card_description.midright, "midleft")
+        quick_display_text(display, "%s: next list" % control_map.get("next card"), "white", self.card_description.midleft, "midright")
+
         if self.ready:
             quick_display_text(display, "%s: Ready!" % control_map.get("use card"), "yellow", (self.x_offset, 750), size=40)
         else:
@@ -182,14 +190,14 @@ class Deck_builder_menu:
         self.play_ready= False
         self.ready_start_time= 0
         self.read_limit= 0
-        self.music= Music_manager(r"Music")
+        self.music= Music_manager(r"Music\\deck_build")
         self.sound= Sound_manager(r"SFX")
 
     def set_menu(self):
         self.read_limit = 0
         self.player_1_menu.set_menu()
         self.player_2_menu.set_menu()
-        self.music.play_index_music(1)
+        self.music.play_music()
 
     def display_ui(self):
         for menu in (self.player_1_menu, self.player_2_menu):

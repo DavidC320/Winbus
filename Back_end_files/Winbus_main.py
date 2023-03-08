@@ -38,9 +38,6 @@ class Main:
             self.clock.tick(60)
             self.event_controller()
 
-            
-            self.display.fill("Black")
-
             if self.game_state == "setup deck":
                 self.deck_menu.set_menu()
                 self.game_state = "deck"
