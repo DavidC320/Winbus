@@ -121,7 +121,14 @@ class User_team:
 
 
     def use_card(self, current_card, pos, add_to_deck= True):
-        if current_card.coin_cost <= self.coins:
+        not_colliding_with_units = True
+        for unit in self.field_units:
+            if self.cursor.collision_rect.colliderect(unit.collision_rect):
+                not_colliding_with_units = False
+                break
+            
+        
+        if current_card.coin_cost <= self.coins and not_colliding_with_units:
             self.coins -= current_card.coin_cost
             for row in current_card.filtered_matrix:
                 for unit, offset in row:
@@ -140,11 +147,22 @@ class User_team:
             self.selected_card = 0
         elif self.selected_card < 0:
             self.selected_card = len(self.held_cards) -1
+            
+        self.change_cursor_size()
     # Controllers #
     ###############
 
     ##########
     # set up #
+    def change_cursor_size(self):
+        card = self.held_cards[self.selected_card]
+        if not card:
+            print("couldn't get size")
+            self.cursor.change_size((60, 60))
+        else:
+            print("got size")
+            self.cursor.change_size(card.collision_box.size)
+    
     def set_up_decks(self, crown_pos, current_time, field_rect, cursor_rect, cursor_color):
         self.field_rect = field_rect
         self.field_units.clear()
@@ -163,6 +181,7 @@ class User_team:
         
         self.generate_cards()
         self.select_cards_for_hands()
+        self.change_cursor_size()
         
     
     def select_cards_for_hands(self):
@@ -254,8 +273,7 @@ class User_team:
             unit.check_properties(game_state, current_time)
             unit.search_for_target(opposing_team, current_time)
             unit.change_velocity(velocity)
-            unit.attack_target(opposing_team, current_time)
-            unit.move()
+
             for unit_name, position in unit.stored_units:
                 self.add_unit(unit_name, position)
             unit.stored_units.clear()
@@ -307,6 +325,11 @@ class User_cursor:
         
     # controller #
     ##############
+    
+    def change_size(self, size):
+        x, y = self.position
+        width, height= size
+        self.collision_rect = pygame.Rect(x, y, width+6, height+6)
 
     def display_cursor(self, display):
         self.collision_rect.center= self.position

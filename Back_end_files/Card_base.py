@@ -16,18 +16,18 @@ class Card:
         
     def create_offsets(self, padding):
         # get largest unit
-        get_size= lambda length: padding + length * (largest_size + padding)
         largest_width= 0
         largest_size= 0
+        
+        get_size= lambda length: padding + length * (largest_size + padding)
         for row in self.unit_matrix:
-            row_width =  get_size(len(row))
-            if row_width > largest_width: largest_width = row_width
 
             for unit in row:
                 temp_unit = create_unit(unit, 0)
                 if temp_unit:
                     if largest_size < temp_unit.size:
                         largest_size = temp_unit.size
+        
         
         # calculate overall size
         # overall_width = padding + largest_row * (largest_size + padding)
@@ -37,6 +37,9 @@ class Card:
         filtered_matrix = []
         starting_y_pos = (overall_hight/2 - (largest_size)/2 - padding) * -1
         for row in self.unit_matrix:
+            row_width =  get_size(len(row))
+            if row_width > largest_width: largest_width = row_width
+            
             filtered_row= []
             width_size = get_size(len(row))
             starting_x_pos= (width_size/2 - (largest_size)/2 - padding) * -1

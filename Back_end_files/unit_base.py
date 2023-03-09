@@ -77,22 +77,31 @@ class Unit:
 
         self.stored_units= []
 
-    def activation(self, activator):
+    ########################################################################################################################################
+    ############################################################## Activators ##############################################################
+    def activation_effects(self, activator):
         for stat, operation, change in activator.effects:
+
+            # Sets a variable to a different number
             if operation == "set":
                 self.__dict__[stat]= change
+
+            # Changes the variable via sum
             elif operation == "change":
                 self.__dict__[stat] += change
+
+            # Creates a summoned unit
             elif operation == "spawn":
                 unit_name, offset = change
                 x, y = self.position
                 x_offset, y_offset = offset
                 new_x, new_y = x + x_offset, y + y_offset
                 self.stored_units.append((unit_name, [new_x, new_y]))
+
         if activator.destroy_on_use:
             activator.not_used = False
 
-    def property_activator(self, activator, game_state, current_time):
+    def check_activator(self, activator, game_state, current_time):
         activation_type = activator.activation_type
         condition = activator.condition
 
@@ -103,16 +112,17 @@ class Unit:
         if check_game_state or check_timer or check_actions:
             print(check_game_state, check_timer, check_actions)
             activator.start_time = current_time
-            self.activation(activator)
+            self.activation_effects(activator)
             self.create_rectangles()
-            
-        self.action.clear()
 
 
     def check_properties(self, game_state, current_time):
         for activator in self.properties:
             if activator.not_used:
-                self.property_activator(activator, game_state, current_time)
+                self.check_activator(activator, game_state, current_time)
+        self.action.clear()
+    ############################################################## Activators ##############################################################
+    ########################################################################################################################################
                 
     def check_flags(self, opposing_team, current_time):
         if "attack_area_on_death" in self.flags and isinstance(self.damage, Area_attack_object):
@@ -120,7 +130,7 @@ class Unit:
             blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
             for unit, _ in blast_enemies:
                 unit.change_health(-self.damage.damage)
-            
+
 
     @property
     def is_alive(self):
@@ -152,18 +162,28 @@ class Unit:
 
     def attack_target(self, opposing_team, current_time):
         target= self.target
+
         if isinstance(target, Unit):
-            if self.attack_rect.colliderect(target.collision_rect) and timer(self.attack_time, self.attack_speed, current_time):
+
+            # checks
+            target_in_attack_range = self.attack_rect.colliderect(target.collision_rect)
+            firerate = timer(self.attack_time, self.attack_speed, current_time)
+            if target_in_attack_range and firerate:
                 self.action.append("attacked")
-                if not "no attack" in self.flags:
-                    if isinstance(self.damage, Area_attack_object):
-                        self.damage.set_rect(target.position, current_time)
-                        blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
-                        for unit, _ in blast_enemies:
-                            unit.change_health(-self.damage.damage)
-                    
-                    else:
-                        target.change_health(-self.damage)
+
+            # flag checks
+            dont_attack = not "no attack" in self.flags
+            attack_allies = "attack allies" in self.flags and target.team_name == self.team_name
+
+            if target_in_attack_range and firerate and dont_attack and attack_allies:
+                if isinstance(self.damage, Area_attack_object):
+                    self.damage.set_rect(target.position, current_time)
+                    blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
+                    for unit, _ in blast_enemies:
+                        unit.change_health(-self.damage.damage)
+                
+                else:
+                    target.change_health(-self.damage)
                 self.attack_time= current_time
 
     def move(self):
@@ -177,11 +197,15 @@ class Unit:
         colliding_enemies = []
 
         for enemy_unit in opposing_team:
+            
+            # Checks
             colliding = collide_rect.colliderect(enemy_unit.collision_rect)
+            target_crown = self.targeting_crown and enemy_unit.unit_type == "crown"
+
             alive = enemy_unit.is_alive
+
             target_all = "all" in self.search_unit_type
             is_target_unit = enemy_unit.unit_type in self.search_unit_type
-            target_crown = self.targeting_crown and enemy_unit.unit_type == "crown"
 
             if (colliding or target_crown) and alive and (is_target_unit or target_all):
                 distance = pygame.math.Vector2(self.position[0], self.position[1]).distance_to(enemy_unit.position)
@@ -201,6 +225,8 @@ class Unit:
             p2_check= enemy_unit.position[0] > self.position[0] and self.team_name == "player 2"
             if is_a_crown and (p1_check or p2_check):
                 crowns.append(enemy_unit)
+        # getting possible targets
+        target_list= []
 
         self.targeting_crown = bool(crowns)
 
@@ -217,6 +243,7 @@ class Unit:
             if seen_enemies:
                 self.target= seen_enemies[0][0]
                 self.attack_time= current_time
+        self.attack_target(opposing_team, current_time)
 
     def change_velocity(self, aimed_velocity: list):
         if not isinstance(self.target, Unit):

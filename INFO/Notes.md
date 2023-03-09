@@ -1,5 +1,14 @@
 # Notes
 
+## Spells
+
+## Healing units from other units
+To get this to work I need make a way for units to only target their team members and the crown but they can't hit the crown so they just stand their waiting for a team member to heal
+
+I will need a flag so that says the unit can only attack allies and search for allies which should be easy just need to add the unit's ally team to search through
+
+---
+
 ## Making building... Again
 
 So all my work got restarted after leaving school so that sucks, but I can remember what I need to do to get this back up again.
@@ -16,7 +25,7 @@ The new effect to get this to work is the spawn effect since activators already 
 
 ### Send created units to the field
 
-in order to get these units to the field I need to get them to the player add unit funtion in the player team so to do that quickly I will add a new varable jsut to store the new units then get them from the unit in unit move
+in order to get these units to the field I need to get them to the player add unit functions in the player team so to do that quickly I will add a new variable just to store the new units then get them from the unit in unit move
 
 ---
 
