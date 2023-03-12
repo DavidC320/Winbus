@@ -2,7 +2,25 @@
 
 ## Spells
 
+Spells will allow the players quick counters to their opponents pushes.
+
+To make this I need to do a couple of things first.
+
+1. Take away the player field restraint from the cursors so that the player can place spells.
+2. Have separate how units and spells will work
+   1. Spells will ignore units inside of the cursor
+   2. units can only place when their are no units inside of the cursor
+
+Spells will basically be still units that blast anything within it's range with damage or an effect. so they will work like bombs with a set timer using health
+Spells can't be targeted by anything.
+
+1. Create 1 damage spell
+   1. This will use a blast attack object to get this done
+2. Create 1 healing spell
+   1. This will use a blast attack object to also get this done
+
 ## Healing units from other units
+
 To get this to work I need make a way for units to only target their team members and the crown but they can't hit the crown so they just stand their waiting for a team member to heal
 
 I will need a flag so that says the unit can only attack allies and search for allies which should be easy just need to add the unit's ally team to search through

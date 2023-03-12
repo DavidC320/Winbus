@@ -268,15 +268,19 @@ class User_team:
     # display #
     ###########
 
-    def move_field_units(self, velocity, opposing_team, current_time, game_state):
+    def update_field_units(self, opposing_team, current_time, game_state):
         for unit in self.field_units:
             unit.check_properties(game_state, current_time)
-            unit.search_for_target(opposing_team, current_time)
-            unit.change_velocity(velocity)
+            unit.search_for_target(opposing_team, self.field_units, current_time)
+            
 
             for unit_name, position in unit.stored_units:
                 self.add_unit(unit_name, position)
             unit.stored_units.clear()
+
+    def move_field_units(self, velocity):
+        for unit in self.field_units:
+            unit.change_velocity(velocity)
 
     def check_field_units(self, opposing_team, current_time):
         for unit in self.field_units:

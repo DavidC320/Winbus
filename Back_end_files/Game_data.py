@@ -11,7 +11,8 @@ cards = {
         "wheels": ("Wheels", "unit", 3, [["wheel", "wheel"], ["wheel", "wheel"]], 10),
         "catapult": ("Catapult", "unit", 4, [["catapult"]], 0),
         "bomb": ("Bomb", "unit", 2, [["bomb"]], 0),
-        "kitchen": ("Kitchen", "building", 1, [["kitchen"]], 0)
+        "kitchen": ("Kitchen", "building", 1, [["kitchen"]], 0),
+        "polish": ("Polish", "unit", 3, [["polish"]], 10)
         },
 
     "card crowns": {
@@ -87,7 +88,11 @@ units= {
 
     "knife": ("Knife", "unit", [], 10, "silver",
               [2, 2], .8, 1, 1,
-              ["all"], 200, 10, [])
+              ["all"], 200, 10, []),
+    
+    "polish": ("Polish", "unit", ["search allies", "attack allies", "search injured"], 20, "black",
+               [3, 3], .6, 1, -1,
+               ["all"], 200, 20, [])
 }
 
 """
@@ -102,6 +107,6 @@ searching -
 search allies : The unit will only target allies
 
 filters -
-search for injured : a filter to only attack injured units
+search injured : a filter to only attack injured units
 
 """

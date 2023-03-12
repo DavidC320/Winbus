@@ -35,10 +35,12 @@ class Combat:
         self.rush_down= 120
         self.show_winner= 4
         self.next_round= 10
+        self.update_unit_speed= .2
 
         # start times
         self.game_start= 0
         self.show_start= 0
+        self.update_start = 0
 
     def check_dead_team(self):
         p1, p2 = self.player_1.team_dead(), self.player_2.team_dead()
@@ -60,6 +62,7 @@ class Combat:
         self.music.play_music()
         self.current_time= pygame.time.get_ticks()
         self.game_start = self.current_time
+        self.update_start = self.current_time
         self.game_state = "fight"
         self.player_1.set_up_decks([100, 200], self.current_time, self.battle_field[0], self.player_1_field[0], "#ab6767")
         self.player_2.set_up_decks([1100, 200], self.current_time, self.battle_field[0], self.player_2_field[0], "#6668aa")
@@ -71,10 +74,12 @@ class Combat:
             (self.player_2, [-1, 0], self.player_1.field_units)):
 
             team.generate_coins(self.current_time)
-            team.move_field_units(velocity, opposing_units, self.current_time, self.game_state)
+            team.move_field_units(velocity)
 
-        self.player_1.check_field_units(self.player_2.field_units, self.current_time)
-        self.player_2.check_field_units(self.player_1.field_units, self.current_time)
+            team.check_field_units(opposing_units, self.current_time)
+            if timer(self.update_start, self.update_unit_speed, self.current_time):
+                team.update_field_units(opposing_units, self.current_time, self.game_state)
+
 
     def change_game_state(self):
         if self.check_dead_team() and self.game_state != "finished":

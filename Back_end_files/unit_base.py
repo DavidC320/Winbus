@@ -76,6 +76,7 @@ class Unit:
         self.targeting_crown= False
 
         self.stored_units= []
+        self.data_text = ""
 
     ########################################################################################################################################
     ############################################################## Activators ##############################################################
@@ -174,8 +175,9 @@ class Unit:
             # flag checks
             dont_attack = not "no attack" in self.flags
             attack_allies = "attack allies" in self.flags and target.team_name == self.team_name
+            not_target_allies = not "attack allies" in self.flags
 
-            if target_in_attack_range and firerate and dont_attack and attack_allies:
+            if target_in_attack_range and firerate and dont_attack and (attack_allies or not_target_allies):
                 if isinstance(self.damage, Area_attack_object):
                     self.damage.set_rect(target.position, current_time)
                     blast_enemies = self.colliding_units(opposing_team, self.damage.collision_rect, self.damage.target_limit)
@@ -192,22 +194,37 @@ class Unit:
         self.position = use_restraint(self.position, self.restraint, self.collision_rect.size)
         self.set_rect_position()
 
-    def colliding_units(self, opposing_team, collide_rect, grab_limit):
+    def colliding_units(self, target_list, collide_rect, grab_limit):
         sort_by_distance = lambda x: x[1]
         colliding_enemies = []
 
-        for enemy_unit in opposing_team:
+        for enemy_unit in target_list:
             
             # Checks
             colliding = collide_rect.colliderect(enemy_unit.collision_rect)
-            target_crown = self.targeting_crown and enemy_unit.unit_type == "crown"
-
+            not_self = enemy_unit != self
             alive = enemy_unit.is_alive
+            seen_enemy = colliding and not_self and alive
 
+            # searches
             target_all = "all" in self.search_unit_type
             is_target_unit = enemy_unit.unit_type in self.search_unit_type
+            search_filters = target_all or is_target_unit
 
-            if (colliding or target_crown) and alive and (is_target_unit or target_all):
+            # target filters
+            target_flags = ["search injured"]
+            no_target_flags = len(set(self.flags).intersection(target_flags)) == 0 # segment form David Alber
+            # https://stackoverflow.com/questions/16138015/checking-if-any-elements-in-one-list-are-in-another
+            # the intersection creates a set of items that appear in both lists
+            target_injured = "search injured" in self.flags and enemy_unit.health < enemy_unit.max_health
+            search_flags = no_target_flags or target_injured
+
+            # override
+            see_crown = enemy_unit.unit_type == "crown" and enemy_unit.team_name != self.team_name
+            target_crown = self.targeting_crown and see_crown
+            self.data_text = "%s and (%s and %s or %s or %s)" % (seen_enemy, search_filters, search_flags, target_crown, see_crown)
+
+            if seen_enemy and (search_filters and search_flags or target_crown or see_crown):
                 distance = pygame.math.Vector2(self.position[0], self.position[1]).distance_to(enemy_unit.position)
                 colliding_enemies.append((enemy_unit, distance))
         else:
@@ -216,17 +233,24 @@ class Unit:
         return colliding_enemies
 
 
-    def search_for_target(self, opposing_team, current_time):
+    def search_for_target(self, opposing_team, ally_team, current_time):
         target = self.target
         crowns = []
+        opposing_crowns = []
         for enemy_unit in opposing_team:
             is_a_crown = enemy_unit.unit_type == "crown"
+            opposing_crowns.append(enemy_unit)
             p1_check= enemy_unit.position[0] < self.position[0] and self.team_name == "player 1"
             p2_check= enemy_unit.position[0] > self.position[0] and self.team_name == "player 2"
             if is_a_crown and (p1_check or p2_check):
                 crowns.append(enemy_unit)
         # getting possible targets
         target_list= []
+        if "search allies" not in self.flags:
+            target_list.extend(opposing_team)
+        else:
+            target_list.extend(ally_team)
+            target_list.extend(opposing_crowns)
 
         self.targeting_crown = bool(crowns)
 
@@ -238,12 +262,13 @@ class Unit:
                 self.target= None
 
         else:
-            seen_enemies = self.colliding_units(opposing_team, self.search_rect, "all")
+            seen_enemies = self.colliding_units(target_list, self.search_rect, "all")
             
             if seen_enemies:
                 self.target= seen_enemies[0][0]
                 self.attack_time= current_time
-        self.attack_target(opposing_team, current_time)
+                
+        self.attack_target(target_list, current_time)
 
     def change_velocity(self, aimed_velocity: list):
         if not isinstance(self.target, Unit):
@@ -294,6 +319,8 @@ class Unit:
                 quick_display_text(display, self.target.name, "white", target_text_pos, size=10)
             else:
                 quick_display_text(display, self.target, "white", target_text_pos, size=10)
+            target_text_pos= [self.position[0], self.position[1] + 25 + self.size/2]
+            quick_display_text(display, self.data_text, "white", target_text_pos, size=10)
 
 ##############################################################################################################################################
 #################################################################### Unit ####################################################################
