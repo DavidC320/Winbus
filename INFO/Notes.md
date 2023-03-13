@@ -1,5 +1,11 @@
 # Notes
 
+## New Damage Object
+
+It's late and I'll note stuff down tomorrow
+Here is the plan
+Create a unit that functions as a splash damager that shoots a blast at their position I.E. the valkyrie from Clash Royal
+
 ## Spells
 
 Spells will allow the players quick counters to their opponents pushes.

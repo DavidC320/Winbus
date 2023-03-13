@@ -207,9 +207,9 @@ class Unit:
             seen_enemy = colliding and not_self and alive
 
             # searches
-            target_all = "all" in self.search_unit_type
+            target_all = "all" in self.search_unit_type and enemy_unit.unit_type != "spell"
             is_target_unit = enemy_unit.unit_type in self.search_unit_type
-            search_filters = target_all or is_target_unit
+            search_filters = (target_all or is_target_unit)
 
             # target filters
             target_flags = ["search injured"]

@@ -93,6 +93,7 @@ class Player_card_pick_sub_menu:
 
             quick_display_text(display, " $%s" % card.coin_cost, "purple", (self.card_selection.left+ 5, y_pos), "midleft", font_size, back_ground_color="black")
             quick_display_text(display, card.name, "brown", (self.card_selection.left+ 45, y_pos), "midleft", font_size, back_ground_color="black")
+            quick_display_text(display, card.card_type, "cyan", (back_ground.centerx, y_pos), "midleft", font_size, back_ground_color="black")
             quick_display_text(display, number_selected, "Green", (self.card_selection.right- 20, y_pos), "midright", font_size, back_ground_color="black")
             start_number += 1
             y_pos += font_size/2 + empty_space

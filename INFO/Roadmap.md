@@ -4,7 +4,7 @@
 
 1. create a way to add factories// buildings that spawn units // Completed
 2. create a way to have healing units in the game // Completed
-3. create a way to make spells
+3. create a way to make spells // completed
 4. create status affects
 
 ## post 2.0.0

@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1.3.0
+Version 1.4.0
 
 Version name
 
-Master of Spells
+Revolution of Damage
 
 ## What is this game
 

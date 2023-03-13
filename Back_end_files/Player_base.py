@@ -36,6 +36,7 @@ class User_team:
         # cursor
         self.cursor = User_cursor()
         self.field_rect= None
+        self.player_unit_field_rect= None
 
         # display
         self.field_units= []
@@ -126,9 +127,16 @@ class User_team:
             if self.cursor.collision_rect.colliderect(unit.collision_rect):
                 not_colliding_with_units = False
                 break
+        cursor_in_player_field = {
+            "player_1" : self.cursor.collision_rect.midright <= self.player_unit_field_rect.midright,
+            "player_2" : self.cursor.collision_rect.midleft >= self.player_unit_field_rect.midleft
+        }
+
+        unit_card_check = current_card.card_type != "spell" and (not_colliding_with_units and cursor_in_player_field.get(self.control_map))
+        spell_card_check = current_card.card_type == "spell"
             
         
-        if current_card.coin_cost <= self.coins and not_colliding_with_units:
+        if current_card.coin_cost <= self.coins and (unit_card_check or spell_card_check):
             self.coins -= current_card.coin_cost
             for row in current_card.filtered_matrix:
                 for unit, offset in row:
@@ -163,8 +171,9 @@ class User_team:
             print("got size")
             self.cursor.change_size(card.collision_box.size)
     
-    def set_up_decks(self, crown_pos, current_time, field_rect, cursor_rect, cursor_color):
+    def set_up_decks(self, crown_pos, current_time, field_rect, unit_place_rect, cursor_color):
         self.field_rect = field_rect
+        self.player_unit_field_rect = unit_place_rect
         self.field_units.clear()
         self.held_cards.clear()
         self.deck.clear()
@@ -175,13 +184,14 @@ class User_team:
         self.coin_gen_start= current_time
 
         crown_card = create_card(self.crown, "card crowns")
-        self.use_card(crown_card, crown_pos, False)
         
-        self.cursor.set_up(crown_pos, cursor_color, cursor_rect)
+        self.cursor.set_up(crown_pos, cursor_color, self.field_rect)
         
         self.generate_cards()
         self.select_cards_for_hands()
         self.change_cursor_size()
+        
+        self.use_card(crown_card, crown_pos, False)
         
     
     def select_cards_for_hands(self):

@@ -12,7 +12,8 @@ cards = {
         "catapult": ("Catapult", "unit", 4, [["catapult"]], 0),
         "bomb": ("Bomb", "unit", 2, [["bomb"]], 0),
         "kitchen": ("Kitchen", "building", 1, [["kitchen"]], 0),
-        "polish": ("Polish", "unit", 3, [["polish"]], 10)
+        "polish": ("Polish", "unit", 3, [["polish"]], 10),
+        "fire blast": ("Fire blast", "spell", 5, [["fire blast dummy"]], 0)
         },
 
     "card crowns": {
@@ -24,7 +25,8 @@ cards = {
 
 area_attacks = {
     "catapult ball": (8, 100, "all"),
-    "bomb blast": (7, 60, "all")
+    "bomb blast": (7, 60, "all"),
+    "fire blast": (10, 140, "all")
 }
 
 
@@ -91,8 +93,12 @@ units= {
               ["all"], 200, 10, []),
     
     "polish": ("Polish", "unit", ["search allies", "attack allies", "search injured"], 20, "black",
-               [3, 3], .6, 1, -1,
-               ["all"], 200, 20, [])
+               [3, 3], .6, 2, -1,
+               ["unit"], 200, 20, []),
+
+    "fire blast dummy": ("Fire blast dummy", "spell", ["attack_area_on_death", "no attack"], 60, "grey",
+                         [2, 2], 0, 1, "fire blast",
+                         ["all"], 1, 1, ["dissolve"]),
 }
 
 """
