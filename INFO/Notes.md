@@ -1,10 +1,69 @@
 # Notes
 
+## Champions
+
+---
+
+## Status Effects
+
+---
+
+## projectiles
+
+---
+
 ## New Damage Object
 
 It's late and I'll note stuff down tomorrow
 Here is the plan
 Create a unit that functions as a splash damager that shoots a blast at their position I.E. the valkyrie from Clash Royal
+
+Tomorrow is Today so here is the idea.
+
+Right now, damage is either a blast object or an integer which is very inconvenient so I want to create a dedicated class for damage.
+The issue with the current way of doing damage is that it's not as mutable as I want it to be in regards to blast control and targeting.
+
+what this solves
+
+1. Unified damage types
+2. Better control of blast attacks
+3. Eventual implantation of projectiles
+
+Problems this will cause
+
+1. Will break every card
+    1. Just tedious work and can be solved easily
+2. A lot of empty list indexes for as both single target
+    1. Will have to develop the idea to figure this out
+3. Since some units can change their attacks do to certain conditions their needs to be a way to change them within the damage class I.E. Crowns only targeting other crowns and bombs only attacking on death
+    1. I will probably need to create conditions for the damage types so their will be more damage objects instead of just changing values of damage types
+4. Targeting will be tide to the damage object itself and would need to need a way to connect to the parent unit.
+    1. I'll add a variable called target_unit_type and then you can have a "parent target" so both are connected
+5. Adding status effects to damage in the future
+    1. When status effects are added
+
+Now for the puedo code
+
+    class Damage_base:
+        name:
+        condition:
+        search unit type: [allies, enemies, parent target]
+        target unit type: [<Any unit type except for None>]
+        damage:
+        attack range:
+        blast size [<Any integer or None for ray hit>]
+        target limit: [<Any integer or None for all>]
+        reload time:
+        status effects:
+
+Found a problem
+
+both the unit and the attack need to search through allies and opposition to work properly.
+I know that the attack funtion within the unit will be moved into the attack object but for colliding I'll proably need to make it a global
+
+This is giving me a headache... I don't
+
+---
 
 ## Spells
 

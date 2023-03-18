@@ -8,11 +8,11 @@ from Menus import Deck_builder_menu
 class Main:
     def __init__(self):
         pygame.display.set_caption("Winbus")
-        self.screen_size= [1200, 800]
-        self.display= pygame.display.set_mode(self.screen_size)
-        self.clock= pygame.time.Clock()
-        self.player_1= User_team("player 1", "player_1")
-        self.player_2= User_team("player 2", "player_2")
+        self.screen_size = [1200, 800]
+        self.display = pygame.display.set_mode(self.screen_size)
+        self.clock = pygame.time.Clock()
+        self.player_1 = User_team("player 1", "player_1")
+        self.player_2 = User_team("player 2", "player_2")
 
         # classes
         self.combat = Combat(self.display, self.clock, self.player_1, self.player_2, self)

@@ -20,7 +20,7 @@ class Sound_manager:
             music.append(sound)
         self.sfx_list = music
 
-    def play_sound(self, index, volume=1):
+    def play_sound(self, index, volume=.6):
         self.sfx_list[index].set_volume(volume)
         self.sfx_list[index].play()
 
@@ -41,7 +41,7 @@ class Music_manager:
     def stop_music(self):
         mixer.music.stop()
 
-    def play_index_music(self, index, volume=0):
+    def play_index_music(self, index, volume=.2):
         self.stop_music()
         if index >= len(self.music_list):
             index = len(self.music_list) -1
@@ -50,7 +50,7 @@ class Music_manager:
         mixer.music.set_volume(volume)
         mixer.music.play(-1)
 
-    def play_music(self, volume=0):
+    def play_music(self, volume=.2):
         self.stop_music()
         music_choice = choice(self.music_list)
         mixer.music.load(music_choice)

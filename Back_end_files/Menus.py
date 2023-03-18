@@ -127,8 +127,6 @@ class Player_card_pick_sub_menu:
             if number > 0:
                 self.player.crown = card_name
                 break
-        
-        print(self.player.init_deck)
 
     def change_index(self, number):
         self.select_index += number

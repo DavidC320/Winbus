@@ -165,10 +165,8 @@ class User_team:
     def change_cursor_size(self):
         card = self.held_cards[self.selected_card]
         if not card:
-            print("couldn't get size")
             self.cursor.change_size((60, 60))
         else:
-            print("got size")
             self.cursor.change_size(card.collision_box.size)
     
     def set_up_decks(self, crown_pos, current_time, field_rect, unit_place_rect, cursor_color):
@@ -239,6 +237,9 @@ class User_team:
             unit.position = position
             unit.team_name= self.team_name
             unit.restraint = self.field_rect
+            unit.create_rectangles()
+            
+            
             self.field_units.append(unit)
     # set up #
     ##########
@@ -281,7 +282,7 @@ class User_team:
     def update_field_units(self, opposing_team, current_time, game_state):
         for unit in self.field_units:
             unit.check_properties(game_state, current_time)
-            unit.search_for_target(opposing_team, self.field_units, current_time)
+            unit.search_for_target(opposing_team, self.field_units, current_time, game_state)
             
 
             for unit_name, position in unit.stored_units:
@@ -295,7 +296,7 @@ class User_team:
     def check_field_units(self, opposing_team, current_time):
         for unit in self.field_units:
             if not unit.is_alive:
-                unit.check_flags(opposing_team, current_time)
+                # unit.check_flags(self.field_units, opposing_team, current_time)
                 self.field_units.pop(self.field_units.index(unit))
 
 ############################################################################################################################################

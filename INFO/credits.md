@@ -6,4 +6,5 @@
 
 ## Music
 
-1. [bitmidi](https://bitmidi.com/)
+1. [Bitmidi](https://bitmidi.com/)
+2. [Midiworld](https://www.midiworld.com/)
