@@ -41,7 +41,7 @@ class Music_manager:
     def stop_music(self):
         mixer.music.stop()
 
-    def play_index_music(self, index, volume=.2):
+    def play_index_music(self, index, volume=.4):
         self.stop_music()
         if index >= len(self.music_list):
             index = len(self.music_list) -1
@@ -50,7 +50,7 @@ class Music_manager:
         mixer.music.set_volume(volume)
         mixer.music.play(-1)
 
-    def play_music(self, volume=.2):
+    def play_music(self, volume=.4):
         self.stop_music()
         music_choice = choice(self.music_list)
         mixer.music.load(music_choice)

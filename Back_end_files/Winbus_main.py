@@ -10,6 +10,9 @@ class Main:
         pygame.display.set_caption("Winbus")
         self.screen_size = [1200, 800]
         self.display = pygame.display.set_mode(self.screen_size)
+        icon = pygame.image.load("Winbus_icons\Winbus_icon.png")
+        pygame.display.set_icon(icon)
+
         self.clock = pygame.time.Clock()
         self.player_1 = User_team("player 1", "player_1")
         self.player_2 = User_team("player 2", "player_2")

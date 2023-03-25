@@ -1,9 +1,11 @@
 # 2/20/2023
 from misc_funtions import timer, use_restraint, quick_display_text
-from Game_data import activators, units, attacks, conditions
+from Game_data import activators, units, attacks, conditions, status_effects
 
 import pygame
 import math
+
+############################################################# create functions #############################################################
 
 def create_unit(unit_name, time):
     wanted_unit = units.get(unit_name)
@@ -19,26 +21,34 @@ def create_activator(activator_name, time):
         return Activator(wanted_activator[0], wanted_activator[1], 
                          wanted_activator[2], wanted_activator[3], wanted_activator[4], wanted_activator[5], time)
         
-def create_attack_object(attack_name):
+def create_attack_object(attack_name, current_time):
     wanted_attack = attacks.get(attack_name)
     if not wanted_attack:
         print("Something went wrong")
-        return Attack_object("Debug", "This is not supposed to be here", 
-                             [], "_parent", True, [], 
-                             0, 70, None, "self", 1, 2)
     
     else:
         return Attack_object(wanted_attack[0], wanted_attack[1], 
-                             wanted_attack[2], wanted_attack[3], wanted_attack[4], wanted_attack[5], 
-                             wanted_attack[6], wanted_attack[7], wanted_attack[8], wanted_attack[9], wanted_attack[10], wanted_attack[11])
+                             wanted_attack[2], wanted_attack[3], wanted_attack[4], wanted_attack[5], wanted_attack[6],
+                             wanted_attack[7], wanted_attack[8], wanted_attack[9], wanted_attack[10], wanted_attack[11], wanted_attack[12],
+                             current_time)
         
-def create_condition(condition_name):
+def create_condition(condition_name, current_time):
     wanted_condition = conditions.get(condition_name)
     if not wanted_condition:
         print("this is not here: %s" % condition_name)
     else:
-        return Condition(wanted_condition[0], wanted_condition[1])
- 
+        return Condition(wanted_condition[0], wanted_condition[1], current_time)
+
+def create_status(status_name, current_time):
+    wanted_status = status_effects.get(status_name)
+
+    if not wanted_status:
+        print("Something went wrong")
+    else:
+        return Status_effect(wanted_status[0], wanted_status[1], wanted_status[2],wanted_status[3], wanted_status[4], wanted_status[5], current_time)
+
+############################################################# create functions #############################################################
+
 def return_target_team(ally_team: list, opposing_team: list, position: list, flags: list, team_name: str, unit_object):
     "Returns the target team and if the position is past a crown"
     
@@ -67,7 +77,8 @@ def return_target_team(ally_team: list, opposing_team: list, position: list, fla
     targeting_crown = bool(crowns)
     return target_list, targeting_crown
     
-def return_collide_list(collide_rect: pygame.Rect, target_team: list, flags: list, unit_search_type: str, team_name: str, targeting_crown: bool, target_limit: int):
+def return_collide_list(collide_rect: pygame.Rect, target_team: list, flags: list, unit_search_type: str, team_name: str, 
+                        targeting_crown: bool, target_limit: int):
     sort_by_distance = lambda x: x[1]
     colliding_enemies = []
     position = collide_rect.center
@@ -108,6 +119,24 @@ def return_collide_list(collide_rect: pygame.Rect, target_team: list, flags: lis
         colliding_enemies = clean_colliding_enemies
     return colliding_enemies[:target_limit]
     
+def get_status_effects(status_list, stat):
+    bonus = 0
+    permanent_bonus = 0
+    bonus_percent = 1
+
+    for status in status_list:
+        if status.stat == stat:
+            if status.change_method == "add":
+                bonus += status.value
+            elif status.change_method == "permanent add":
+                permanent_bonus += status.value
+            elif status.change_method == "percent":
+                bonus_percent == status.value
+
+    if bonus_percent < 0:
+        bonus_percent = 0
+
+    return bonus, permanent_bonus, bonus_percent
 
 ##############################################################################################################################################
 #################################################################### Unit ####################################################################
@@ -137,7 +166,7 @@ class Unit:
         self.walk_speed= walk_speed
         self.attack = []
         for attack_name in attack:
-            attack = create_attack_object(attack_name)
+            attack = create_attack_object(attack_name, time)
             if attack:
                 self.attack.append(attack)
 
@@ -164,10 +193,16 @@ class Unit:
         self.stored_units= []
         self.data_text = ""
         self.create_rectangles()
+        self.statuses = []
+
+    def add_status(self, status_name, current_time):
+        status = create_status(status_name, current_time)
+        if status:
+            self.statuses.append(status)
 
     ########################################################################################################################################
     ############################################################## Activators ##############################################################
-    def activation_effects(self, activator):
+    def activation_effects(self, activator, current_time):
         for stat, operation, change in activator.effects:
 
             # Sets a variable to a different number
@@ -186,6 +221,10 @@ class Unit:
                 new_x, new_y = x + x_offset, y + y_offset
                 self.stored_units.append((unit_name, [new_x, new_y]))
 
+            elif operation == "add status":
+                self.add_status(change, current_time)
+
+
         if activator.destroy_on_use:
             activator.not_used = False
 
@@ -200,11 +239,27 @@ class Unit:
 
         if check_game_state or check_timer or check_actions:
             activator.start_time = current_time
-            self.activation_effects(activator)
+            self.activation_effects(activator, current_time)
             self.create_rectangles()
+    
+
+    def check_status_effect(self, game_state, current_time):
+        _, permanent_health, _ = get_status_effects(self.statuses, "health")
+        self.change_health(permanent_health, current_time)
+
+        _, permanent_damage, _ = get_status_effects(self.statuses, "damage")
+        for attack in self.attack:
+            attack.damage += permanent_damage
+
+        for effect in self.statuses:
+            if effect.check_status_destroy(self, game_state, current_time):
+                self.statuses.remove(effect)
 
 
     def check_properties(self, game_state, current_time):
+        if self.statuses:
+            self.check_status_effect(game_state, current_time)
+
         for activator in self.properties:
             if activator.not_used:
                 self.check_activator(activator, game_state, current_time)
@@ -222,7 +277,7 @@ class Unit:
             self.attacking = False
 
         for attack in self.attack:
-            if attack.conditions_met(game_state, self):
+            if attack.conditions_met(game_state, self, current_time):
                 attacking, actions = attack.attack_targets(current_time, ally_team, opposing_team, self.team_name, self)
                 self.action.extend(actions)
                 if self.attacking != True and attacking: self.attacking = True
@@ -259,12 +314,13 @@ class Unit:
         return self.health > 0
     
 
-    def change_health(self, number):
+    def change_health(self, number, current_time, statuses= []):
         self.health += number
         if self.health > self.max_health:
             self.health = self.max_health
-        elif self.health <= 0:
-            del self
+
+        for status_name in statuses:
+            self.add_status(status_name, current_time)
 
 
     def set_rect_position(self):
@@ -282,8 +338,13 @@ class Unit:
 
 
     def move(self):
-        self.position[0] += self.velocity[0] * self.walk_speed
-        self.position[1] += self.velocity[1] * self.walk_speed
+        speed = self.walk_speed
+        bonus_speed, _, bonus_percent = get_status_effects(self.statuses, "speed")
+
+        speed = (speed + bonus_speed) * bonus_percent
+
+        self.position[0] += self.velocity[0] * speed
+        self.position[1] += self.velocity[1] * speed
         self.position = use_restraint(self.position, self.restraint, self.collision_rect.size)
         self.set_rect_position()
 
@@ -372,27 +433,110 @@ class Activator:
         self.not_used= True
 
 class Condition:
-    def __init__(self, condition_type, condition_value):
+    def __init__(self, condition_type, condition_value, current_time):
         self.condition_type = condition_type
         """
         game state
         not game state
         dead
+        alive
+        action
+        not action
+        timer
+        not timer
         """
         self.condition_value = condition_value
+        self.creation_time = current_time
+
+    def check_condition(self, game_state, parent_unit, current_time):
+        if self.condition_type == "game state" and self.condition_value != game_state:
+            return False
+        
+        elif self.condition_type == "not game state" and self.condition_value == game_state:
+            return False
+
+        elif self.condition_type == "dead" and parent_unit.is_alive:
+            return False
+        
+        elif self.condition_type == "alive" and not parent_unit.is_alive:
+            return False
+        
+        elif self.condition_type == "action" and self.condition_value not in parent_unit.action:
+            return False
+        
+        elif self.condition_type == "not action" and self.condition_value in parent_unit.action:
+            return False
+        
+        elif self.condition_type == "timer" and not timer(self.creation_time, self.condition_value, current_time):
+            return False
+        
+        elif self.condition_type == "not timer" and timer(self.creation_time, self.condition_value, current_time):
+            return False
+        
+        else:
+            return True
+
+    
+class Status_effect:
+    def __init__(self, name, status_type, duration, method, stat, number_change, current_time):
+        self.name = name
+        self.status_type = status_type
+        """
+        Status types
+        """
+
+        self.status_duration = []
+        for condition_name in duration:
+            condition = create_condition(condition_name, current_time)
+            if condition:
+                self.status_duration.append(Condition)
+        """
+        Durations
+        condition - if the conditions inside of this are true
+        """
+        self.change_method = method
+        """
+        Methods
+            [damage, speed]
+        add
+
+            [damage]
+        Permanent add
+
+            [damage, speed]
+        Percent -
+        """
+        self.time_of_creation = current_time
+        self.stat = stat
+        self.value = number_change
+
+    def check_status_destroy(self, parent_unit, game_state, current_time):
+        "Checks if this status needs to be destroyed"
+
+
+        if self.change_method in ["permanent add"]:
+            return True
+        else:
+            for condition in self.conditions:
+                if not condition.check_condition(game_state, parent_unit, current_time):
+                    return False
+            else:
+                return True
+                
 #############################################################################################################################################
 ################################################################# Activator #################################################################
 #############################################################################################################################################
 
-##########
-# attack
-##########
+############################################################################################################################################
+################################################################## attack ##################################################################
+############################################################################################################################################
                 
 class Attack_object:
     def __init__(
         self, name: str, description: str, 
-        conditions: list, unit_target_type: str, stop_when_attack: bool, flags: list,
-        damage: int, attack_range: int, blast_size: int, blast_type: str, target_limit: int, reload_time: int
+        conditions: list, unit_target_type: str, stop_when_attack: bool, flags: list, statuses: list,
+        damage: int, attack_range: int, blast_size: int, blast_type: str, target_limit: int, reload_time: int,
+        current_time
         ):
         self.name = name
         self.description = description
@@ -400,13 +544,14 @@ class Attack_object:
         # damage controls
         self.conditions = []
         for condition_name in conditions:
-            condition = create_condition(condition_name)
+            condition = create_condition(condition_name, current_time)
             if condition:
                 self.conditions.append(condition)
         
         self.unit_target_type = unit_target_type
         self.stop_when_attack = stop_when_attack
         self.flags = flags
+        self.statuses= statuses
         
         # Damage
         self.damage = damage
@@ -428,7 +573,7 @@ class Attack_object:
         self.attack_fire_time= 0
         
         
-    def conditions_met(self, game_state, unit):
+    def conditions_met(self, game_state, unit, current_time):
         if self.unit_target_type == "_parent":
             self.unit_target_type = unit.search_unit_type
         if self.flags == "_parent":
@@ -438,13 +583,7 @@ class Attack_object:
         self.attack_range.center= unit.position
         
         for condition in self.conditions:
-            if condition.condition_type == "game state" and condition.condition_value != game_state:
-                return False
-            
-            elif condition.condition_type == "not game state" and condition.condition_value == game_state:
-                return False
-
-            elif condition.condition_type == "dead" and unit.is_alive:
+            if not condition.check_condition(game_state, unit, current_time):
                 return False
         else:
             return True
@@ -465,11 +604,11 @@ class Attack_object:
                 filtered_blasts.append((blast_rect, time, length))
         
         pygame.draw.rect(display, "red", self.attack_range, 5)
+        quick_display_text(display, "Damage: %s" % self.damage, "white", self.attack_range.midbottom, back_ground_color="black", size=12)
         
         self.target_positions = filtered_list
         self.blasts = filtered_blasts
-                
-            
+                    
                 
     def get_in_blast(self, target_team, blast_rect):
         caught = []
@@ -483,6 +622,15 @@ class Attack_object:
         opposing_team, _ = return_target_team(ally_team, enemy_team, self.attack_range.center, self.flags, team_name, parent_unit)
         opposing_team = return_collide_list(self.attack_range, opposing_team, self.flags, self.unit_target_type, team_name, False, self.target_limit)
         actions = []
+        damage = self.damage
+
+        if len(self.unit_target_type) > 5:
+            print(parent_unit.name)        
+
+        # damage stuff
+        if parent_unit.statuses:
+            bonus_damage, _, bonus_percent_damage = get_status_effects(parent_unit.statuses, "damage")
+            damage = (self.damage + bonus_damage) * bonus_percent_damage
 
         for target in opposing_team:
 
@@ -513,12 +661,12 @@ class Attack_object:
                     self.blasts.append((blast_rect, current_time, self.reload_time))
                     for unit in blast_enemies:
                         self.target_positions.append(((x, y), unit.position, current_time, self.reload_time))
-                        unit.change_health(-self.damage)
+                        unit.change_health(-damage, current_time, self.statuses)
                         if not unit.is_alive:
                             actions.append("killed")
                 
                 else:
-                    target.change_health(-self.damage)
+                    target.change_health(-damage, current_time, self.statuses)
                     if not target.is_alive:
                             actions.append("killed")
         if opposing_team and "attacked" in actions:
@@ -526,8 +674,6 @@ class Attack_object:
             
         return self.stop_when_attack and bool(opposing_team), actions
     
-
-
-##########
-# attack #
-##########
+############################################################################################################################################
+################################################################## attack ##################################################################
+############################################################################################################################################

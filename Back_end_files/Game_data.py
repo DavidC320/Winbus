@@ -19,8 +19,9 @@ cards = {
         },
 
     "card crowns": {
-        "crown": ("Crown", "noble", 3, [["crown"]], 0),
-        "twins": ("twins", "noble", 3, [["crown twin"], ["crown twin"]], 30),
+        "crown": ("Crown", "crown", 3, [["crown"]], 0),
+        "twins": ("Twins", "crown", 3, [["crown twin"], ["crown twin"]], 30),
+        "blood crown": ("Blood crown", "crown", 5, [["blood crown"]], 0)
     }
 }
 
@@ -33,85 +34,91 @@ activators = {
     "self harm": ("Self harm", "Attacking causes recoil", "check actions", "attacked", [["health", "change", -1]],
                   False),
     "summon knife": ("Summon knife", "Summon a knife every 2 seconds", "timer", 2, [[None, "spawn", ("knife", [0, 0])]],
-                     False)
+                     False),
+
+    "blood lust" : ("Blood lust", "Upon killing a unit, this unit will gain +1 to all attacks permanently", "check actions", "killed", [[None, "add status", "blood thirst"]], False)
 }
 
 attacks = {
     "crown gun" : ("Crown gun", "Every crown needs a something to stave off those pesky Daggers.",
-                   ["crown gun"], ["all"], True, [],  
+                   ["crown gun"], ["all"], True, [], [],  
                    25, 400, None, "self", 1, 2),
     
     "crown blade" : ("Crown sword", "Now things get serious", 
-                     ["crown blade"], ["crown", "noble"], True, [],  
+                     ["crown blade"], ["crown", "noble"], True, [], [],  
                      25, 240, None, "self", 1, 2),
 
     "twin crown gun" : ("Twin crown gun", "Every crown needs a something to stave off those pesky Daggers.",
-                   ["crown gun"], ["all"], True, [],  
+                   ["crown gun"], ["all"], True, [], [],  
                    9, 300, None, "self", 1, 2),
     
     "twin crown blade" : ("Twin crown sword", "Now things get serious", 
-                     ["crown blade"], ["crown", "noble"], True, [],  
+                     ["crown blade"], ["crown", "noble"], True, [], [],  
                      9, 240, None, "self", 1, 2),
     
     "dagger stab" : ("Dagger stab", "Poke.", 
-                     [], "_parent", True, [],
+                     [], "_parent", True, [], [],
                      2, 40, None, "self", 1, 1),
     
     "bow arrow" : ("Bow Arrow", "Tink.", 
-                   [], "_parent", True, [],
+                   [], "_parent", True, [], [],
                    2, 190, None, "self", 1, 2),
     
     "sword slash" : ("Sword slash", "A pristine cut for a pristine steak",
-                     [], "_parent", True, [],
+                     [], "_parent", True, [], [],
                      6, 70, None, "self", 1, 1.5),
     
     "ballista bolt" : ("Ballista Bolt", "I was in front of a bolt once.",
-                       [], "_parent", True, [],
+                       [], "_parent", True, [], [],
                        10, 240, None, "self", 1, 2.5),
     
     "catapult ball" : ("Catapult ball", "How did they manage to get stone to explode?",
-                       [], "_parent", True, [],
+                       [], "_parent", True, [], [],
                        8, 190, 100, "target", 1, 3),
 
     "wheel bump" : ("Wheel bump", "A frontal assault on any nobility in it's way",
-                    [], "_parent", True, [],
+                    [], "_parent", True, [], [],
                     1, 50, None, "self", 1, 1.5),
 
     "bomb tick" : ("Bomb tick", "It's rage is harmful",
-                   [], "_parent", True, [],
+                   [], "_parent", True, [], [],
                    0, 40, None, "self", 1, 1),
 
     "bomb blast" : ("Bomb blast", "Kaboom!",
-                    ["bomb explode"], "_parent", True, [],
+                    ["bomb explode"], "_parent", True, [], [],
                     10, 40, 60, "self", 1, 1),
     
     "knife stab" : ("Knife stab", "Poke",
-                    [], "_parent", True, [],
+                    [], "_parent", True, [], [],
                     1, 20, None, "self", 1, 1),
 
     "polish splash" : ("Polish Splash", "Splash and now healed",
-                       [], "_parent", True, "_parent",
+                       [], "_parent", True, "_parent", [],
                        -1, 40, None, "self", 1, 1),
     
     "fire blast" : ("Fire blast", "A big explosion fit for a master.",
-                    ["bomb explode"], "_parent", True, [],
+                    ["bomb explode"], "_parent", True, [], [],
                     10, 60, 140, "self", 1, 1),
 
     "shock bolts" : ("Shock bolts", "Stings does it?",
-                     [], ["all"], False, [],
-                     1, 120, None, "self", 10, .5),
+                     [], ["all"], False, [], [],
+                     1, 120, 120, "self", 10, .5),
 
     "axe swing" : ("Axe swing", "Hit all your enemies",
-                   [], "_parent", True, [],
-                   6, 40, 80, "self", 30, .8),
+                   [], "_parent", True, [], [],
+                   6, 40, 80, "self", 30, 1.2),
 
     "blood sacrifice" : ("Blood sacrifice", "Take the souls of your allies for power",
-                         ["crown gun"], ["all"], True, ["search allies", "attack allies",],
+                         ["crown gun"], ["unit", "noble"], True, ["search allies", "attack allies",], [],
                          1, 400, None, "self", 1, .5),
 
     "blood axe" : ("Blood axe", "Your rage consumes you.",
-                   ["crown blade"], ["all"], True, [],
-                   1, 240, None, "self", 1, 2)
+                   ["crown blade"], ["all"], True, [], [],
+                   1, 220, None, "self", 1, 4)
+}
+
+status_effects = {
+    "blood thirst" : ("Blood thirst", "?", [], "permanent add", "damage", 1)
 }
 
 conditions = {
@@ -132,7 +139,7 @@ units = {
 
     "blood crown" : ("Blood crown", "crown", [], 150, "red",
                      [200, 200], 0, ["blood sacrifice", "blood axe"],
-                     ["all"], 200, ["crown rage"]),
+                     ["all"], 200, ["crown rage", "blood lust"]),
 
     "dagger": ("Dagger", "unit", [], 20, "Grey",
                [4, 4], .6, ["dagger stab"],
@@ -187,12 +194,12 @@ units = {
                          ["all"], 1, ["dissolve"]),
 
     "shocker" : ("Shocker", "unit", [], 80, "cyan",
-                 [60, 60], .1, ["shock bolts"],
-                 [], 50, []),
+                 [60, 60], .4, ["shock bolts"],
+                 [], 180, []),
 
-    "axe" : ("Axe", "unit", [], 20, "silver",
-             [40, 40], 1, ["axe swing"],
-             ["all"], 80, [])
+    "axe" : ("Axe", "unit", [], 40, "silver",
+             [15, 15], 1.1, ["axe swing"],
+             ["all"], 200, [])
 }
 
 """
