@@ -1,10 +1,10 @@
 # Wimbus
 
-Version 1.5.0
+Version 1.6.1
 
 Version name
 
-Revolution of Damage
+Status and Effects
 
 ## What is this game
 
