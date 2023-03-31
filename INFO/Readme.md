@@ -1,10 +1,11 @@
 # Wimbus
 
-Version 1.6.1
+Version 1.0 Alpha
+By DavidC
 
 Version name
 
-Status and Effects
+Release
 
 ## What is this game
 
